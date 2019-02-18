@@ -4,6 +4,7 @@ import time
 import json
 import re
 import asyncio
+from functools import partial
 import aiohttp
 import requests
 from bs4 import BeautifulSoup as Soup
@@ -110,11 +111,23 @@ def async_make_name_mp3_dict(url):
     return dict(results)
 
 
-def api_make_name_mp3_dict(page):
+def api_make_name_mp3_dict(api, page):
     results_dict = {}
-    info_json = requests.get("http://127.0.0.1:3000/audios?page=".format(page)).text
+    info_json = requests.get(api.format(page)).text
     info_list = json.loads(info_json).get("result", [])
     for info in info_list:
         results_dict[info.get("audio_name")] = (info.get("audio_url"), info.get("audio_mp3_url"), info.get("audio_flow_info"), info.get("audio_djs"))
     return results_dict
 
+
+API_RECENT = "http://127.0.0.1:3000/audios/recent?page={}"
+API_HOT_COMMENT = "http://127.0.0.1:3000/audios/hot/comment?page={}"
+API_HOT_LIKE = "http://127.0.0.1:3000/audios/hot/like?page={}"
+API_DJS_XIMENG = "http://127.0.0.1:3000/audios/djs/ximeng?page={}"
+API_CATE_WOW = "http://127.0.0.1:3000/audios/cate/wow?page={}"
+
+recent_func = partial(api_make_name_mp3_dict, API_RECENT)
+hot_comment_func = partial(api_make_name_mp3_dict, API_HOT_COMMENT)
+hot_like_func = partial(api_make_name_mp3_dict, API_HOT_LIKE)
+djs_ximeng_func = partial(api_make_name_mp3_dict, API_DJS_XIMENG)
+cate_wow_func = partial(api_make_name_mp3_dict, API_CATE_WOW)
