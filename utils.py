@@ -3,20 +3,18 @@
 import time
 import json
 import re
+from collections import Counter
 import asyncio
 from functools import partial
 import aiohttp
 import requests
 from bs4 import BeautifulSoup as Soup
 from spider import *
+from config import *
+import pymysql
 
 
-BASE_AUDIO_CATE_URL = "https://www.gcores.com/categories/9/originals"
-BASE_AUDIO_LINK_URL = "https://www.gcores.com/radios/"
-TEST_AUDIO_LINK = "https://www.gcores.com/radios/105962"
-
-flow_pattern = re.compile(r"timelines:(.*)jplayerSwf", re.DOTALL)
-
+FLOW_PATTERN = re.compile(r"timelines:(.*)jplayerSwf", re.DOTALL)
 
 def make_soup(url):
     try:
@@ -61,7 +59,7 @@ def get_timeflow_info(soup):
     div = soup.find_all("div")[-1]
     src = div.find("script", type="text/javascript").text
     try:
-        flow_info = re.search(flow_pattern, src).group(1)
+        flow_info = re.search(FLOW_PATTERN, src).group(1)
     except:
         flow_info = ''  # todo
     # to make a info list an fmt it
@@ -111,23 +109,60 @@ def async_make_name_mp3_dict(url):
     return dict(results)
 
 
-def api_make_name_mp3_dict(api, page):
+def api_make_name_mp3_dict(api, name='', page=0):
     results_dict = {}
-    info_json = requests.get(api.format(page)).text
+    info_json = requests.get(api.format(name, page)).text
     info_list = json.loads(info_json).get("result", [])
     for info in info_list:
-        results_dict[info.get("audio_name")] = (info.get("audio_url"), info.get("audio_mp3_url"), info.get("audio_flow_info"), info.get("audio_djs"))
+        results_dict[info.get("audio_name")] = (info.get("audio_url"), info.get("audio_mp3_url"))
     return results_dict
 
 
-API_RECENT = "http://127.0.0.1:3000/audios/recent?page={}"
-API_HOT_COMMENT = "http://127.0.0.1:3000/audios/hot/comment?page={}"
-API_HOT_LIKE = "http://127.0.0.1:3000/audios/hot/like?page={}"
-API_DJS_XIMENG = "http://127.0.0.1:3000/audios/djs/ximeng?page={}"
-API_CATE_WOW = "http://127.0.0.1:3000/audios/cate/wow?page={}"
+def api_get_play_info(api, audio_id):
+    info_json = requests.get(api.format(audio_id)).text
+    info_list = json.loads(info_json).get("result", [])
+    return info_list
+
+
+def make_base_dict_func(BASE_DICT, API):
+    category_dict = {}
+    for cate_name, cate_name_num in BASE_DICT.items():
+        category_dict[cate_name] = partial(api_make_name_mp3_dict, API, cate_name_num)
+    return category_dict
+
+
+def get_top_djs(limit=50):
+    db = pymysql.connect(**MYSQL_CONFIG)
+    cursor = db.cursor()
+    sql = "select audio_djs from gcore_audio"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    cursor.close()
+    result = [eval(i[0]) for i in result]
+    def make_result():
+        for i in result:
+            for j in i:
+                yield j
+
+    top_djs = Counter(list(make_result())).most_common(limit)
+    return dict(top_djs)
+
+
+def make_djs_dict_func(top_djs):
+    djs_dict = {}
+    for i, j in top_djs.items():
+        djs_dict[i[0]+"    播客数量" + str(j)] = partial(api_make_name_mp3_dict, API_DJS, i[0])
+    return djs_dict
+
+
+# 主播字典
+API_DJS_DICT = make_djs_dict_func(get_top_djs())
+
+# 分类字典
+API_CATEGORY_DICT = make_base_dict_func(CATE_DICT, API_CATEGORY)
+API_TOPIC_DICT = make_base_dict_func(TOPIC_DICT, API_TOPIC)
 
 recent_func = partial(api_make_name_mp3_dict, API_RECENT)
 hot_comment_func = partial(api_make_name_mp3_dict, API_HOT_COMMENT)
 hot_like_func = partial(api_make_name_mp3_dict, API_HOT_LIKE)
-djs_ximeng_func = partial(api_make_name_mp3_dict, API_DJS_XIMENG)
-cate_wow_func = partial(api_make_name_mp3_dict, API_CATE_WOW)
+playinfo_func = partial(api_get_play_info, API_PLAY_INFO)

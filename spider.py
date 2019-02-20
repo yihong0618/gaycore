@@ -10,7 +10,6 @@ import requests
 from bs4 import BeautifulSoup as Soup
 import aiohttp
 
-
 BASE_AUDIO_CATE_URL = "https://www.gcores.com/categories/9/originals"
 BASE_AUDIO_LINK_URL = "https://www.gcores.com/radios/"
 TEST_AUDIO_LINK = "https://www.gcores.com/radios/105962"
@@ -175,7 +174,7 @@ async def fetch_gcore_data(url):
             return url, mp3_url, djs_info, time_flow_info
 
 
-# 获取一个cate的信息i
+# 获取一个cate的信息
 def get_one_cate_info(url):
     event_loop = asyncio.get_event_loop()
     soup = make_soup(url)

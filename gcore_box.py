@@ -1,11 +1,12 @@
 import curses
 import os
 import threading
+import webbrowser
 import time
-
 from player import Player
-from utils import (BASE_AUDIO_CATE_URL, async_make_name_mp3_dict,
-                   recent_func, hot_comment_func, hot_like_func, djs_ximeng_func, cate_wow_func)
+from utils import (BASE_AUDIO_CATE_URL, async_make_name_mp3_dict, playinfo_func,
+                   recent_func, hot_comment_func, hot_like_func,
+                   API_TOPIC_DICT, API_CATEGORY_DICT, API_DJS_DICT, TOPIC_DICT)
 
 # Author: Yi Hong
 # Date: 2019.01.29
@@ -17,10 +18,10 @@ PAD_HEIGHT = 1000
 
 MENU_DICT = {
     "最近电台": recent_func,
-    "电台主播": {"西蒙": djs_ximeng_func, "42": ["7", "7", "7"]},
-    "专题电台": {"辐射": list(range(10)), "魔兽": cate_wow_func},
-    "电台分类": {"news": ["2", "3", "8"], "daily": ["q", "y", "u"], "pro": ["l", "k", "p"], "regular": [3,3,3]},
-    "电台排行": {"comment": hot_comment_func, "likes": hot_like_func},
+    "主播电台": API_DJS_DICT,
+    "专题电台": API_TOPIC_DICT,
+    "分类电台": API_CATEGORY_DICT,
+    "排行电台": {"讨论热门": hot_comment_func, "喜欢热门": hot_like_func},
 }
 
 
@@ -34,6 +35,7 @@ class GcoreBox:
         self.PAD_HEIGHT = PAD_HEIGHT
         self.windows = []
         self.flow_info = {}
+        self.last_flag = False
         self.menu_dict = MENU_DICT
         self.dict_stack = []  # 定义一个stack 方便进入下个目录和返回下个目录
         self.page_num = -1  # 用于翻页
@@ -88,7 +90,7 @@ class GcoreBox:
         time.sleep(0.01)
         return thread
 
-    def _highlight_selected(self):
+    def mainloop(self):
 
         topy, topx = self._center(self.windows[0])
 
@@ -97,6 +99,8 @@ class GcoreBox:
         top = self.windows[0]
         while True:
             self.windows[current_num].bkgd(curses.color_pair(1))
+            if len(self.windows) == 1:
+                last = 0
             self.windows[last].bkgd(curses.color_pair(2))
 
             maxy, maxx = self.stdscr.getmaxyx()
@@ -117,19 +121,32 @@ class GcoreBox:
             if c == curses.KEY_RESIZE:
                 self.stdscr.clear()
 
-            if c in [ord('j'), curses.KEY_DOWN]:
+            if c in [ord("j"), curses.KEY_DOWN]:
                 current_num = current_num + 1 if current_num < len(self.windows) - 1 else 0
 
-            if c in [ord('k'), curses.KEY_UP]:
+            if c in [ord("k"), curses.KEY_UP]:
                 current_num = current_num - 1 if current_num > 0 else len(self.windows) - 1
 
             # 退出
-            if c == ord('q'):
+            if c == ord("q"):
                 self._end_curses()
                 self.player._q_mp3()
                 return
 
-            # 播放当前选中的音乐
+            if c == ord("w"):
+                try:
+                    info_list = self.info_dict.get(self.boxes[current_num])
+                    gcore_url = info_list[0]
+                    webbrowser.open(gcore_url)
+                except:
+                    pass
+
+            if c == ord("d"):
+                audio_name = self.boxes[current_num]
+                info_list = self.info_dict.get(audio_name)
+                # 下载当前MP3
+                self. _download_mp3(info_list[1], audio_name + ".mp3")
+
             if c == ord('\n'):
                 try:
                     if self.player.popen_handler:
@@ -138,7 +155,9 @@ class GcoreBox:
                     info_list = self.info_dict.get(self.boxes[current_num])
                     # 播放当前选择的音乐
                     self.start_to_play(info_list[1])
-                    self.flow_info = eval(info_list[2])
+                    audio_id = info_list[0].split("/")[-1]
+                    time_flow_info = playinfo_func(audio_id).get("audio_flow_info", "")
+                    self.flow_info = eval(time_flow_info)
                     self._add_info_box()
                 except:
                     pass
@@ -155,10 +174,16 @@ class GcoreBox:
                     else:
                         # 利用函数一等对象特性（可能需要重构）
                         if callable(self.menu_dict):
+                            if self.last_flag:
+                                break
                             self.dict_stack.append(self.menu_dict)
                             self.page_num += 1
                             self.info_dict = self.menu_dict(self.page_num)
                             self.boxes = list(self.info_dict.keys())
+                            if len(self.boxes) < 10 and (not self.last_flag):
+                                self.last_flag = True
+                                self.last_flag_num = self.page_num
+                            # 处理翻页到头情况
                         else:
                             self.boxes = self.menu_dict
                     break
@@ -169,6 +194,9 @@ class GcoreBox:
                 try:
                     last_menu = self.dict_stack.pop()
                     if callable(last_menu):
+                        if self.last_flag:
+                            self.page_num = self.last_flag_num
+                            self.last_flag = False
                         self.page_num = self.page_num - 1
                         if self.page_num >= 0:
                             self.info_dict = last_menu(self.page_num)
@@ -212,15 +240,25 @@ class GcoreBox:
         box.box()
         self.windows.append(box)
 
+    @staticmethod
+    def _download_mp3(mp3_url, audio_name):
+        try:
+            from urllib.request import urlretrieve
+        except:
+            from urllib import urlretrieve
+        try:
+            urlretrieve(mp3_url, audio_name)
+            print("done")
+        except:
+            print("error")
+
     def pick(self, boxes):
         self.windows = list(self.make_text_box(boxes))
         if self.player.popen_handler:
             self._add_info_box()
-        self._highlight_selected()
+        self.mainloop()
 
 if __name__ == "__main__":
     g = GcoreBox()
     # names_dict = async_make_name_mp3_dict(BASE_AUDIO_CATE_URL+"?page=1")
-    # names_dict = api_make_name_mp3_dict(1)
     g.pick(list(MENU_DICT.keys()))
-    # g.pick(list(names_dict.keys()))
