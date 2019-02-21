@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 
-ALI_MYSQL_CONFIG = {"host": "47.98.19.8",
-                    "user": "root",
-                    "password": "Zouzou19890208!",
-                    "db": "gcore",
-                    "charset": "utf8mb4"}
 
 LOCAL_MYSQL_CONFIG = {"host": "127.0.0.1",
                       "user": "root",
@@ -13,12 +8,11 @@ LOCAL_MYSQL_CONFIG = {"host": "127.0.0.1",
                       "charset": "utf8mb4"}
 
 # MYSQL_CONFIG = LOCAL_MYSQL_CONFIG
-MYSQL_CONFIG = ALI_MYSQL_CONFIG
 
 ALI_BASE_URL = "http://47.93.19.8:3000"
 LOCAL_BASE_URL = "http://127.0.0.1:3000"
-#API_URL = ALI_BASE_URL
-API_URL = LOCAL_BASE_URL
+API_URL = ALI_BASE_URL
+# API_URL = LOCAL_BASE_URL
 
 
 API_PLAY_INFO = API_URL + "/audio/{}"
