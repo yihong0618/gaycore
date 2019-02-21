@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-ALI_MYSQL_CONFIG = {"host": "127.0.0.1",
+ALI_MYSQL_CONFIG = {"host": "47.98.19.8",
                     "user": "root",
                     "password": "Zouzou19890208!",
                     "db": "gcore",
@@ -12,12 +12,12 @@ LOCAL_MYSQL_CONFIG = {"host": "127.0.0.1",
                       "db": "gcore",
                       "charset": "utf8mb4"}
 
-MYSQL_CONFIG = LOCAL_MYSQL_CONFIG
-# MYSQL_CONFIG = ALI_MYSQL_CONFIG
+# MYSQL_CONFIG = LOCAL_MYSQL_CONFIG
+MYSQL_CONFIG = ALI_MYSQL_CONFIG
 
 ALI_BASE_URL = "http://47.93.19.8:3000"
 LOCAL_BASE_URL = "http://127.0.0.1:3000"
-# API_URL = ALI_BASE_URL
+#API_URL = ALI_BASE_URL
 API_URL = LOCAL_BASE_URL
 
 
@@ -27,6 +27,7 @@ API_HOT_COMMENT = API_URL+ "/audios/hot/comment?page={}"
 API_HOT_LIKE = API_URL + "/audios/hot/like?page={}"
 API_CATEGORY = API_URL + "/audios/category/{}?page={}"
 API_TOPIC = API_URL + "/audios/topic/{}?page={}"
+API_ALL_DJS = API_URL + "/audios/alldjs"
 API_DJS = API_URL + "/audios/djs/{}?page={}"
 
 CATE_DICT = {"Gadio News": 45,

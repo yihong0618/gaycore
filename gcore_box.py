@@ -1,4 +1,5 @@
 import curses
+import datetime
 import os
 import threading
 import webbrowser
@@ -90,6 +91,10 @@ class GcoreBox:
         time.sleep(0.01)
         return thread
 
+    def start_to_download(self, mp3_url, audio_name):
+        thread = threading.Thread(target=self._download_mp3, args=(mp3_url, audio_name))
+        thread.start()
+
     def mainloop(self):
 
         topy, topx = self._center(self.windows[0])
@@ -130,9 +135,10 @@ class GcoreBox:
             # 退出
             if c == ord("q"):
                 self._end_curses()
-                self.player._q_mp3()
+                self.player.q_mp3()
                 return
 
+            # 打开浏览器
             if c == ord("w"):
                 try:
                     info_list = self.info_dict.get(self.boxes[current_num])
@@ -141,22 +147,34 @@ class GcoreBox:
                 except:
                     pass
 
+            # 下载
             if c == ord("d"):
-                audio_name = self.boxes[current_num]
-                info_list = self.info_dict.get(audio_name)
-                # 下载当前MP3
-                self. _download_mp3(info_list[1], audio_name + ".mp3")
+                if self.dict_stack and callable(self.dict_stack[-1]):
+                    audio_name = self.boxes[current_num]
+                    info_list = self.info_dict.get(audio_name)
+                    # 下载当前MP3
+                    self.start_to_download(info_list[1], audio_name + ".mp3")
+                    self.stdscr.refresh()
+                else:
+                    pass
 
             if c == ord('\n'):
                 try:
                     if self.player.popen_handler:
-                        self.player._q_mp3()
+
+                        # 时间轴信息无用
+                        if current_num == len(self.windows) - 1:
+                            webbrowser.open(self.flow_img)
+                            continue
+                        self.player.q_mp3()
                         self.windows.pop()
                     info_list = self.info_dict.get(self.boxes[current_num])
                     # 播放当前选择的音乐
                     self.start_to_play(info_list[1])
                     audio_id = info_list[0].split("/")[-1]
-                    time_flow_info = playinfo_func(audio_id).get("audio_flow_info", "")
+                    playing_info = playinfo_func(audio_id)
+                    time_flow_info = playing_info.get("audio_flow_info", "")
+                    self.djs_info = playing_info.get("audio_djs", "")
                     self.flow_info = eval(time_flow_info)
                     self._add_info_box()
                 except:
@@ -213,7 +231,7 @@ class GcoreBox:
 
             # 暂停或继续播放
             if c == ord(" "):
-                self.player._pause_or_resume_mp3()
+                self.player.pause_or_resume_mp3()
 
             # 播放时间轴
             self._play_timeflow_info()
@@ -221,33 +239,55 @@ class GcoreBox:
         self.pick(self.boxes)
 
     def _play_timeflow_info(self):
+
+        # 解析主播格式
+        f_parser = lambda x: ', '.join([i[0] for i in eval(x)])
         # 播放时间轴
         if self.player.popen_handler:
             flow_info = dict(self.flow_info.get(self.player.process_length, ""))
+            djs_info = f_parser(self.djs_info)[:50]
             self.windows[-1].box()
-            self.windows[-1].addstr(1, self.BOX_WIDTH//2, "时间轴")
-            self.windows[-1].addstr(2, 1, "time:  " + str(self.player.process_length))
+            self.windows[-1].addstr(1, 1, "时间轴")
+            self.windows[-1].addstr(1, self.BOX_WIDTH//2-25, "主播:" + djs_info)
+            play_time = str(datetime.timedelta(seconds=self.player.process_length))
+            self.windows[-1].addstr(3, 1, "time:  " + play_time)
             if flow_info.get("content"):
-                self.windows[-1].clear()
-                self.windows[-1].addstr(3, 1, "title:\n  " + flow_info.get("title", ""))
-                self.windows[-1].addstr(5, 1, "content:\n      " + flow_info.get("content", ""))
-                content_length = flow_info.get("content", "")
-                next_y = len(content_length)//BOX_WIDTH
-                self.windows[-1].addstr(7+next_y, 1, "img:\n   " + flow_info.get("img", ""))
+                try:
+                    self.flow_img = flow_info.get("img", "")
+                    self.windows[-1].clear()
+                    self.windows[-1].addstr(4, 1, "title: " + flow_info.get("title", ""))
+                    content = flow_info.get("content", "")
+                    # 去掉换行符
+                    content = content.replace("\n", "")
+                    content_length = len(content)
+                    if content_length > 230:
+                        content = content[:230] + "..."
+                    self.windows[-1].addstr(5, 1, "content:\n      " + content)
+                except:
+                    pass
+                # next_y = len(content_length)//BOX_WIDTH
+                # self.windows[-1].addstr(7+next_y, 1, "img:\n   " + flow_info.get("img", ""))
 
     def _add_info_box(self):
-        box = self.pad.derwin(self.BOX_HEIGHT*4, self.BOX_WIDTH, self.max_height, self.PAD_WIDTH//2 - self.BOX_WIDTH//2)
+        box = self.pad.derwin(self.BOX_HEIGHT*5, self.BOX_WIDTH, self.max_height, self.PAD_WIDTH//2 - self.BOX_WIDTH//2)
         box.box()
         self.windows.append(box)
 
     @staticmethod
     def _download_mp3(mp3_url, audio_name):
+
+        # 下载进度
+        def report(count, blockSize, totalSize):
+            import sys
+            percent = int(count*blockSize*100/totalSize)
+            sys.stdout.write("\r%d%%" % percent + ' complete')
+            sys.stdout.flush()
         try:
             from urllib.request import urlretrieve
         except:
             from urllib import urlretrieve
         try:
-            urlretrieve(mp3_url, audio_name)
+            urlretrieve(mp3_url, audio_name, reporthook=report)
             print("done")
         except:
             print("error")

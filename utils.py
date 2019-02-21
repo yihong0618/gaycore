@@ -11,7 +11,6 @@ import requests
 from bs4 import BeautifulSoup as Soup
 from spider import *
 from config import *
-import pymysql
 
 
 FLOW_PATTERN = re.compile(r"timelines:(.*)jplayerSwf", re.DOTALL)
@@ -110,11 +109,13 @@ def async_make_name_mp3_dict(url):
 
 
 def api_make_name_mp3_dict(api, name='', page=0):
+
+    # f_parser = lambda x: ','.join([i[0] for i in eval(x)])
     results_dict = {}
     info_json = requests.get(api.format(name, page)).text
     info_list = json.loads(info_json).get("result", [])
     for info in info_list:
-        results_dict[info.get("audio_name")] = (info.get("audio_url"), info.get("audio_mp3_url"))
+        results_dict[info.get("audio_name")] = (info.get("audio_url", ""), info.get("audio_mp3_url", ""))
     return results_dict
 
 
@@ -132,13 +133,9 @@ def make_base_dict_func(BASE_DICT, API):
 
 
 def get_top_djs(limit=50):
-    db = pymysql.connect(**MYSQL_CONFIG)
-    cursor = db.cursor()
-    sql = "select audio_djs from gcore_audio"
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    cursor.close()
-    result = [eval(i[0]) for i in result]
+    info_json = requests.get(API_ALL_DJS).text
+    result = json.loads(info_json).get("result", [])
+    result = [eval(i) for i in result]
     def make_result():
         for i in result:
             for j in i:
