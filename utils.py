@@ -15,6 +15,7 @@ from config import *
 
 FLOW_PATTERN = re.compile(r"timelines:(.*)jplayerSwf", re.DOTALL)
 
+
 def make_soup(url):
     try:
         response = requests.get(url).text
@@ -26,7 +27,8 @@ def make_soup(url):
 
 def get_mp3_url(soup):
     https_url = soup.find("p", class_="story_actions").find("a").attrs["href"]
-    return https_url.replace("https", "http")  # replace https to http for mpg123
+    # replace https to http for mpg123
+    return https_url.replace("https", "http")
 
 
 def make_name_mp3_dict(url):
@@ -96,7 +98,8 @@ async def fetch_data(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url, timeout=5) as resp:
             r = await resp.text()
-            name, mp3_url, time_flow_info, djs_info = get_showcase_info(Soup(r, "html.parser"))
+            name, mp3_url, time_flow_info, djs_info = get_showcase_info(
+                Soup(r, "html.parser"))
             return name, (url, mp3_url, time_flow_info, djs_info)
 
 
@@ -110,12 +113,12 @@ def async_make_name_mp3_dict(url):
 
 def api_make_name_mp3_dict(api, name='', page=0):
 
-    # f_parser = lambda x: ','.join([i[0] for i in eval(x)])
     results_dict = {}
     info_json = requests.get(api.format(name, page)).text
     info_list = json.loads(info_json).get("result", [])
     for info in info_list:
-        results_dict[info.get("audio_name")] = (info.get("audio_url", ""), info.get("audio_mp3_url", ""))
+        results_dict[info.get("audio_name")] = (
+            info.get("audio_url", ""), info.get("audio_mp3_url", ""))
     return results_dict
 
 
@@ -128,7 +131,8 @@ def api_get_play_info(api, audio_id):
 def make_base_dict_func(BASE_DICT, API):
     category_dict = {}
     for cate_name, cate_name_num in BASE_DICT.items():
-        category_dict[cate_name] = partial(api_make_name_mp3_dict, API, cate_name_num)
+        category_dict[cate_name] = partial(
+            api_make_name_mp3_dict, API, cate_name_num)
     return category_dict
 
 
@@ -136,6 +140,7 @@ def get_top_djs(limit=50):
     info_json = requests.get(API_ALL_DJS).text
     result = json.loads(info_json).get("result", [])
     result = [eval(i) for i in result]
+
     def make_result():
         for i in result:
             for j in i:
@@ -148,7 +153,8 @@ def get_top_djs(limit=50):
 def make_djs_dict_func(top_djs):
     djs_dict = {}
     for i, j in top_djs.items():
-        djs_dict[i[0]+"    播客数量" + str(j)] = partial(api_make_name_mp3_dict, API_DJS, i[0])
+        djs_dict[i[0]+"    播客数量" +
+                 str(j)] = partial(api_make_name_mp3_dict, API_DJS, i[0])
     return djs_dict
 
 

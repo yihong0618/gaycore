@@ -10,7 +10,7 @@ class Player:
         self.process_location = 0
         self.process_length = 0
 
-    # 参考music代码
+    # 参考musicibox代码
     def run_mpg123(self, url, expires=-1, get_time=-1):
         para = ["mpg123", "-R"] + []
         self.popen_handler = subprocess.Popen(

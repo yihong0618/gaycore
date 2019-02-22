@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-LOCAL_MYSQL_CONFIG = {"host": "127.0.0.1",
-                      "user": "root",
-                      "password": "",
-                      "db": "gcore",
-                      "charset": "utf8mb4"}
-
-# MYSQL_CONFIG = LOCAL_MYSQL_CONFIG
-
 ALI_BASE_URL = "http://47.93.19.8:3000"
 LOCAL_BASE_URL = "http://127.0.0.1:3000"
 API_URL = ALI_BASE_URL
@@ -33,6 +24,7 @@ CATE_DICT = {"Gadio News": 45,
              "东京旮旯": 52,
              "葱丝推拿": 36,
              "圣地巡礼": 44,
+             "广告节目": 62,
              }
 
 TOPIC_DICT = {"辐射": "辐射",

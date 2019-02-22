@@ -67,14 +67,20 @@ def paser_value(value):
             audio_djs, audio_like, audio_comment, audio_cate, audio_cate_name]
 
 
-def insert_one_page(page):
+def get_page_data(page):
     url = BASE_AUDIO_CATE_URL + "?page={}".format(page)
     cate_result = get_one_cate_info(url)
     insert_data = [dict(zip(name_list, paser_value(i))) for i in cate_result]
     data_list = [Audio(**i) for i in insert_data]
+    return data_list
+
+
+def insert_one_page(page):
+    data_list = get_page_data(page)
     session.add_all(data_list)
     try:
         session.commit()
+        # session.merge()
     except:
         traceback.print_exc()
         session.rollback()
@@ -93,3 +99,22 @@ def insert_all_page(start, end):
             except:
                 traceback.print_exc()
                 print("{} is wrong".format(i))
+
+
+def daily_spider(page=0):
+    old_id_list = session.query(Audio.audio_id).order_by(Audio.audio_id.desc()).limit(30)
+    old_id_list = [str(i.audio_id) for i in old_id_list]
+    data_list = get_page_data(page)
+    spider_id_list = [(i.audio_id, i.audio_like, i.audio_comment) for i in data_list]
+    spider_old_id_list = [i for i in spider_id_list if i[0] in old_id_list]
+    spider_new_id_list = list(set([i[0] for i in spider_id_list]) - set([i[0] for i in spider_old_id_list]))
+
+    # new audios to insert
+    insert_values = [i for i in data_list if i.audio_id in spider_new_id_list]
+    session.add_all(insert_values)
+    session.commit()
+
+    # old audios to update
+    for i in spider_old_id_list:
+        session.query(Audio).filter(Audio.audio_id==i[0]).update({"audio_like": i[1], "audio_comment": i[2]})
+        session.commit()
