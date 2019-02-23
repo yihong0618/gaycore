@@ -9,12 +9,12 @@
 
 ### macos安装
 
-  pip3 install gaycore
-  brew install mpg123
+  - pip3 install gaycore
+  - brew install mpg123
 
-Linux
-  pip3 install gaycore
-  安装 mpg123
+### Linux
+  - pip3 install gaycore
+  - 安装 mpg123
   
 
 ## 按键说明
