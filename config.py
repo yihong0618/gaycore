@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+
+BOX_WIDTH = 80
+BOX_HEIGHT = 3
+PAD_WIDTH = 400
+PAD_HEIGHT = 1000
+
 ALI_BASE_URL = "http://47.93.19.8:3000"
 LOCAL_BASE_URL = "http://127.0.0.1:3000"
 API_URL = ALI_BASE_URL
@@ -7,8 +13,8 @@ API_URL = ALI_BASE_URL
 
 
 API_PLAY_INFO = API_URL + "/audio/{}"
-API_RECENT = API_URL+ "/audios/recent?page={}"
-API_HOT_COMMENT = API_URL+ "/audios/hot/comment?page={}"
+API_RECENT = API_URL + "/audios/recent?page={}"
+API_HOT_COMMENT = API_URL + "/audios/hot/comment?page={}"
 API_HOT_LIKE = API_URL + "/audios/hot/like?page={}"
 API_CATEGORY = API_URL + "/audios/category/{}?page={}"
 API_TOPIC = API_URL + "/audios/topic/{}?page={}"

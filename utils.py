@@ -16,6 +16,11 @@ from config import *
 FLOW_PATTERN = re.compile(r"timelines:(.*)jplayerSwf", re.DOTALL)
 
 
+# func to format the content
+def chunkstring(string, length):
+    return [string[0+i:length+i] for i in range(0, len(string), length)]
+
+
 def make_soup(url):
     try:
         response = requests.get(url).text
