@@ -2,9 +2,9 @@
 
 from setuptools import setup, find_packages
 
-VERSION = '0.0.1'
+VERSION = '0.1.0'
 
-setup(name='gaycore',
+setup(name='gcore',
       version=VERSION,
       description="a tiny and smart cli player of gcore audio, based on Python package curses and mpg123 for Linux or Mac",
       long_description='gaycore listen player using cli enjoy it',
@@ -32,6 +32,6 @@ setup(name='gaycore',
       ],
       entry_points={
           'console_scripts': [
-              'gaycore = main:run'
+              'gcore = main:run'
           ], }
       )
