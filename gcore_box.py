@@ -211,7 +211,7 @@ class GcoreBox:
                     webbrowser.open(self.flow_img)
 
             # 打开来源
-            if c == ord("s"):
+            if c == ord("o"):
                 try:
                     webbrowser.open(self.quote)
                 except:
@@ -294,7 +294,8 @@ class GcoreBox:
                     content_list = chunkstring(content, 37)
                     for i, j in enumerate(content_list):
                         self.windows[-1].addstr(6 + i, 1,"  " + j)
-                    self.windows[-1].addstr(13 , 1, "打开来源请按o键")
+                    if self.quote:
+                        self.windows[-1].addstr(13 , 1, "打开来源请按o键")
                 except:
                     pass
 
