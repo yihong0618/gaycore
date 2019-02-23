@@ -14,7 +14,7 @@ from gaycore.utils import (BASE_AUDIO_CATE_URL, async_make_name_mp3_dict, playin
                    recent_func, hot_comment_func, hot_like_func, chunkstring,
                    API_TOPIC_DICT, API_CATEGORY_DICT, API_DJS_DICT, TOPIC_DICT)
 
-from config import *
+from gaycore.config import *
 
 # Author: Yi Hong
 # Date: 2019.01.29
