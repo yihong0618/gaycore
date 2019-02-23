@@ -13,7 +13,10 @@
   brew install mpg123
 
 Linux
+  pip3 install gaycore
+  安装 mpg123
   
+
 ## 按键说明
 
 - 上下左右（移动， 进入下一层目录， 返回上一层目录）
