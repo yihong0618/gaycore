@@ -7,8 +7,8 @@ from sqlalchemy import Column, Integer, String, TEXT, DATE, SmallInteger
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, mapper
-from spider import *
-from utils import *
+from gaycore.spider import *
+from gaycore.utils import *
 
 Base = declarative_base()
 engine = create_engine("mysql+pymysql://root@127.0.0.1:3306/gcore?charset=utf8mb4")

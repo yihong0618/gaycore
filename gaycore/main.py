@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gcore_box import *
+from gaycore.gcore_box import *
 
 def run():
     gcore_box = GcoreBox()

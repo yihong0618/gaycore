@@ -9,8 +9,8 @@ import os
 import threading
 import webbrowser
 import time
-from player import Player
-from utils import (BASE_AUDIO_CATE_URL, async_make_name_mp3_dict, playinfo_func,
+from gaycore.player import Player
+from gaycore.utils import (BASE_AUDIO_CATE_URL, async_make_name_mp3_dict, playinfo_func,
                    recent_func, hot_comment_func, hot_like_func, chunkstring,
                    API_TOPIC_DICT, API_CATEGORY_DICT, API_DJS_DICT, TOPIC_DICT)
 

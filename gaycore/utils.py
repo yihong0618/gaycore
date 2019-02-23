@@ -9,8 +9,8 @@ from functools import partial
 import aiohttp
 import requests
 from bs4 import BeautifulSoup as Soup
-from spider import *
-from config import *
+from gaycore.spider import *
+from gaycore.config import *
 
 
 FLOW_PATTERN = re.compile(r"timelines:(.*)jplayerSwf", re.DOTALL)
