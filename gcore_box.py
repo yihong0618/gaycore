@@ -325,7 +325,3 @@ class GcoreBox:
             self._add_info_box()
         self.mainloop()
 
-
-if __name__ == "__main__":
-    g = GcoreBox()
-    g.pick(list(MENU_DICT.keys()))
