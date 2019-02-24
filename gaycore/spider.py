@@ -53,7 +53,6 @@ def make_name_mp3_dict(soup):
     audio_link_list = [i.find("a").attrs["href"] for i in audio_list]
     mp3_link_list = [get_mp3_url(i) for i in audio_link_list]
     time_flow_list = [get_timeflow_info(i) for i in audio_link_list]
-    #audio_showcase = soup.find("div", class_="showcase_time")
     return dict(zip(audio_name_list, zip(audio_link_list, mp3_link_list)))
 
 

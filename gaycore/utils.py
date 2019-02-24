@@ -158,7 +158,7 @@ def get_top_djs(limit=50):
 def make_djs_dict_func(top_djs):
     djs_dict = {}
     for i, j in top_djs.items():
-        djs_dict[i[0]+"    播客数量" +
+        djs_dict[i[0]+"    电台数量" +
                  str(j)] = partial(api_make_name_mp3_dict, API_DJS, i[0])
     return djs_dict
 

@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-VERSION = '0.1.2'
+VERSION = '0.1.4'
 
 setup(name='gaycore',
       version=VERSION,

@@ -1,20 +1,24 @@
 import curses
-import sys
 import datetime
+import os
+import sys
+import threading
+import time
+import webbrowser
+
+from gaycore.config import *
+from gaycore.player import Player
+from gaycore.utils import (API_CATEGORY_DICT, API_DJS_DICT, API_TOPIC_DICT,
+                           BASE_AUDIO_CATE_URL, TOPIC_DICT,
+                           async_make_name_mp3_dict, chunkstring,
+                           hot_comment_func, hot_like_func, playinfo_func,
+                           recent_func)
+
 try:
     from urllib.request import urlretrieve
 except:
     from urllib import urlretrieve
-import os
-import threading
-import webbrowser
-import time
-from gaycore.player import Player
-from gaycore.utils import (BASE_AUDIO_CATE_URL, async_make_name_mp3_dict, playinfo_func,
-                   recent_func, hot_comment_func, hot_like_func, chunkstring,
-                   API_TOPIC_DICT, API_CATEGORY_DICT, API_DJS_DICT, TOPIC_DICT)
 
-from gaycore.config import *
 
 # Author: Yi Hong
 # Date: 2019.01.29
@@ -54,7 +58,7 @@ class GcoreBox:
         curses.cbreak()
         curses.curs_set(0)
         curses.start_color()
-        curses.init_pair(1, curses.COLOR_BLACK, 197)
+        curses.init_pair(1, curses.COLOR_BLACK, 197) # 接近机核主题的颜色
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
         self.stdscr.bkgd(curses.color_pair(2))
         self.stdscr.timeout(100)
@@ -250,7 +254,6 @@ class GcoreBox:
                 except:
                     pass
 
-
             # 暂停或继续播放
             if c == ord(" "):
                 self.player.pause_or_resume_mp3()
@@ -293,9 +296,9 @@ class GcoreBox:
                         content = content[:230] + "..."
                     content_list = chunkstring(content, 37)
                     for i, j in enumerate(content_list):
-                        self.windows[-1].addstr(6 + i, 1,"  " + j)
+                        self.windows[-1].addstr(6 + i, 1, "  " + j)
                     if self.quote:
-                        self.windows[-1].addstr(13 , 1, "打开来源请按o键")
+                        self.windows[-1].addstr(13, 1, "打开来源请按o键")
                 except:
                     pass
 
@@ -317,11 +320,10 @@ class GcoreBox:
             time.sleep(1)
             self.stdscr.clear()
         except:
-            print("error")
+            self.stdscr.addstr(0, 0, "download error")
 
     def pick(self, boxes):
         self.windows = list(self.make_text_box(boxes))
         if self.player.popen_handler:
             self._add_info_box()
         self.mainloop()
-
