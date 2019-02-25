@@ -2,6 +2,7 @@
 
 命令行听机核，给你不一样的体验, 灵感来源于musicbox, Python3编写
 支持时间轴！
+[![gaycore-gif](https://github.com/yihong0618/gaycore/blob/master/img/gcore1.gif)]
 
 ## 安装
 
