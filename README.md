@@ -16,7 +16,8 @@
 ### Linux
   - pip3 install gaycore
   - 安装 mpg123
-  
+  - **Ubuntu下** sudo apt install mpg123
+
 
 ## 按键说明
 
