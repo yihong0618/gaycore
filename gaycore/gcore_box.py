@@ -58,7 +58,10 @@ class GcoreBox:
         curses.cbreak()
         curses.curs_set(0)
         curses.start_color()
-        curses.init_pair(1, curses.COLOR_BLACK, 197) # 接近机核主题的颜色
+        try:
+            curses.init_pair(1, curses.COLOR_BLACK, 197) # 接近机核主题的颜色
+        except:
+            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_RED) # 树莓派 windows无法使用机核like色
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
         self.stdscr.bkgd(curses.color_pair(2))
         self.stdscr.timeout(100)
