@@ -263,7 +263,7 @@ class GcoreBox:
                 self.player.pause_or_resume_mp3()
 
             # 快进/倒退
-            if c == ord("L"):
+            if c == ord("f"):
                 self.player.forward_mp3(5)
 
             # 播放时间轴
