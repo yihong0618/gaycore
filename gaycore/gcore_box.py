@@ -59,9 +59,10 @@ class GcoreBox:
         curses.curs_set(0)
         curses.start_color()
         try:
-            curses.init_pair(1, curses.COLOR_BLACK, 197) # 接近机核主题的颜色
+            curses.init_pair(1, curses.COLOR_BLACK, 197)  # 接近机核主题的颜色
         except:
-            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_RED) # 树莓派 windows无法使用机核like色
+            # 树莓派 windows无法使用机核like色
+            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_RED)
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
         self.stdscr.bkgd(curses.color_pair(2))
         self.stdscr.timeout(100)
@@ -261,6 +262,10 @@ class GcoreBox:
             if c == ord(" "):
                 self.player.pause_or_resume_mp3()
 
+            # 快进/倒退
+            if c == ord("L"):
+                self.player.forward_mp3(5)
+
             # 播放时间轴
             self._play_timeflow_info()
 
@@ -279,9 +284,15 @@ class GcoreBox:
             self.windows[-1].box()
             self.windows[-1].addstr(1, 1, "时间轴")
             self.windows[-1].addstr(1, self.BOX_WIDTH//2-25, "主播:" + djs_info)
-            play_time = str(datetime.timedelta(
-                seconds=self.player.process_length))
-            self.windows[-1].addstr(3, 1, "time:  " + play_time)
+            # play_time = str(datetime.timedelta(
+            #    seconds=self.player.process_length))
+            play_time_hrs, play_time_min = divmod(
+                self.player.process_location, 3600)
+            play_time_min, play_time_sec = divmod(
+                self.player.process_location, 60)
+
+            self.windows[-1].addstr(3, 1, "time:  " + str(play_time_hrs).zfill(
+                2) + ':' + str(play_time_min).zfill(2) + ':' + str(play_time_sec).zfill(2))
             if flow_info.get("content"):
                 try:
                     self.flow_img = flow_info.get("img", "")

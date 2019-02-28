@@ -9,6 +9,7 @@ class Player:
         self.popen_handler = None
         self.process_location = 0
         self.process_length = 0
+        self.fps = 0
 
     # 参考musicibox代码
     def run_mpg123(self, url, expires=-1, get_time=-1):
@@ -31,6 +32,8 @@ class Player:
                 out = strout.split(" ")
                 self.process_location = int(float(out[3]))
                 self.process_length = int(float(out[3]) + float(out[4]))
+                if(float(out[3]) != 0):
+                    self.fps = float(out[1]) / float(out[3])
 
             elif strout == "@P 0":
                 # end, moving to next
@@ -46,6 +49,14 @@ class Player:
         if not self.popen_handler:
             return
         self.popen_handler.stdin.write(b"P\n")
+        self.popen_handler.stdin.flush()
+
+    # 快进/倒退10s
+    def forward_mp3(self, seconds):
+        if not self.popen_handler:
+            return
+        self.popen_handler.stdin.write(
+            b"J +" + str(seconds*int(self.fps)).encode("utf-8") + b"\n")
         self.popen_handler.stdin.flush()
 
     # 退出播放
