@@ -1,10 +1,10 @@
-# 因为近期机核网站改版，因此本项目暂时没有最新的电台，请期待作者更新代码给您带来更好的命令行听机核
+# 支持机核新版本，后续功能及代码重构进行中
 
 # 命令行听机核，你值得拥有（Linux Mac）
 
 命令行听机核，给你不一样的体验, 灵感来源于musicbox, Python3编写
 支持时间轴！
-[![gaycore-gif](https://github.com/yihong0618/gaycore/blob/master/img/gcore1.gif)]
+[![gaycore-gif](https://github.com/yihong0618/gaycore/blob/master/img/gcore1.gif)
 
 ## 安装
 
