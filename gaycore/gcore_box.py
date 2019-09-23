@@ -9,8 +9,7 @@ import webbrowser
 from gaycore.config import *
 from gaycore.player import Player
 from gaycore.utils import (API_CATEGORY_DICT, API_DJS_DICT, API_TOPIC_DICT,
-                           BASE_AUDIO_CATE_URL, TOPIC_DICT,
-                           async_make_name_mp3_dict, chunkstring,
+                           BASE_AUDIO_CATE_URL, TOPIC_DICT, chunkstring,
                            hot_comment_func, hot_like_func, playinfo_func,
                            recent_func)
 
