@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-VERSION = '0.1.6'
+VERSION = '1.0.0'
 
 setup(name='gaycore',
       version=VERSION,
@@ -17,7 +17,7 @@ setup(name='gaycore',
       include_package_data=True,
       zip_safe=True,
       install_requires=[
-          'requests', 'aiohttp', 'beautifulsoup4', 'PyMySQL', 'SQLAlchemy'
+          'requests', 'PyMySQL', 'SQLAlchemy'
       ],
       classifiers=[
           "Development Status :: 4 - Beta",
