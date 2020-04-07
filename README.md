@@ -1,5 +1,4 @@
-# 因机核上线了付费节目，暂时不可以，请等待更新
-
+# 请更新 pip(pip3) install -U gaycore
 # 命令行听机核，你值得拥有（Linux Mac）
 
 命令行听机核，给你不一样的体验, 灵感来源于musicbox, Python3编写
