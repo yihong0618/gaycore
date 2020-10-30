@@ -1,3 +1,5 @@
+# Author: Yi Hong
+# Date: 2019.01.29
 import curses
 import datetime
 import os
@@ -8,10 +10,12 @@ import webbrowser
 
 from gaycore.config import *
 from gaycore.player import Player
-from gaycore.utils import (API_CATEGORY_DICT, API_DJS_DICT, API_TOPIC_DICT,
-                           BASE_AUDIO_CATE_URL, TOPIC_DICT, chunkstring,
-                           hot_comment_func, hot_like_func, playinfo_func,
-                           recent_func)
+# from gaycore.utils import (API_CATEGORY_DICT, API_DJS_DICT, API_TOPIC_DICT,
+#                            BASE_AUDIO_CATE_URL, TOPIC_DICT, chunkstring,
+#                            hot_comment_func, hot_like_func, playinfo_func,
+#                            recent_func)
+
+from gaycore.utils import recent_func
 
 try:
     from urllib.request import urlretrieve
@@ -19,15 +23,13 @@ except:
     from urllib import urlretrieve
 
 
-# Author: Yi Hong
-# Date: 2019.01.29
+
 
 MENU_DICT = {
     "最近电台": recent_func,
-    "主播电台": API_DJS_DICT,
-    "专题电台": API_TOPIC_DICT,
-    "分类电台": API_CATEGORY_DICT,
-    "排行电台": {"讨论热门": hot_comment_func, "喜欢热门": hot_like_func},
+    "主播电台": {"a":2},
+    "分类电台": {"b":2},
+    "最热电台": {"c":2},
 }
 
 
@@ -41,6 +43,7 @@ class GcoreBox:
         self.PAD_HEIGHT = PAD_HEIGHT
         self.windows = []
         self.flow_info = {}
+        self.cache_dict = {}
         self.flow_img = ""
         self.quote = ""
         self.last_flag = False
@@ -112,163 +115,169 @@ class GcoreBox:
 
     def mainloop(self):
 
-        topy, topx = self._center(self.windows[0])
+        try:
+            topy, topx = self._center(self.windows[0])
 
-        current_num = 0
-        last = 1
-        top = self.windows[0]
-        while True:
-            self.windows[current_num].bkgd(curses.color_pair(1))
-            # 处理只有一个box的情况
-            if len(self.windows) == 1:
-                last = 0
-            self.windows[last].bkgd(curses.color_pair(2))
+            current_num = 0
+            last = 1
+            top = self.windows[0]
+            while True:
+                self.windows[current_num].bkgd(curses.color_pair(1))
+                # 处理只有一个box的情况
+                if len(self.windows) == 1:
+                    last = 0
+                self.windows[last].bkgd(curses.color_pair(2))
 
-            maxy, maxx = self.stdscr.getmaxyx()
-            cy, cx = self.windows[current_num].getbegyx()
+                maxy, maxx = self.stdscr.getmaxyx()
+                cy, cx = self.windows[current_num].getbegyx()
 
-            if ((topy + maxy - self.BOX_HEIGHT) <= cy):
-                top = self.windows[current_num]
+                if ((topy + maxy - self.BOX_HEIGHT) <= cy):
+                    top = self.windows[current_num]
 
-            if topy >= cy + self.BOX_HEIGHT:
-                top = self.windows[current_num]
+                if topy >= cy + self.BOX_HEIGHT:
+                    top = self.windows[current_num]
 
-            if last != current_num:
-                last = current_num
+                if last != current_num:
+                    last = current_num
 
-            topy, topx = self._center(top)
-            c = self.stdscr.getch()
+                topy, topx = self._center(top)
+                c = self.stdscr.getch()
 
-            if c == curses.KEY_RESIZE:
-                self.stdscr.clear()
+                if c == curses.KEY_RESIZE:
+                    self.stdscr.clear()
 
-            if c in [ord("j"), curses.KEY_DOWN]:
-                current_num = current_num + \
-                    1 if current_num < len(self.windows) - 1 else 0
+                if c in [ord("j"), curses.KEY_DOWN]:
+                    current_num = current_num + \
+                        1 if current_num < len(self.windows) - 1 else 0
 
-            if c in [ord("k"), curses.KEY_UP]:
-                current_num = current_num - \
-                    1 if current_num > 0 else len(self.windows) - 1
+                if c in [ord("k"), curses.KEY_UP]:
+                    current_num = current_num - \
+                        1 if current_num > 0 else len(self.windows) - 1
 
-            # enter the menu selected
-            if c in [curses.KEY_RIGHT, ord("l")]:
-                try:
-                    if not callable(self.menu_dict):
-                        self.page_num = -1  # 恢复翻页处理，翻页过多的问题
-                        self.dict_stack.append(self.menu_dict)
-                        self.menu_dict = self.menu_dict.get(
-                            self.boxes[current_num])
-                    if isinstance(self.menu_dict, dict):
-                        self.boxes = list(self.menu_dict.keys())
-                    else:
-                        # 利用函数一等对象特性（可能需要重构）
-                        if callable(self.menu_dict):
-                            if self.last_flag:
-                                break
+                # enter the menu selected
+                if c in [curses.KEY_RIGHT, ord("l")]:
+                    try:
+                        if not callable(self.menu_dict):
+                            self.page_num = -1  # 恢复翻页处理，翻页过多的问题
                             self.dict_stack.append(self.menu_dict)
-                            self.page_num += 1
-                            self.info_dict = self.menu_dict(self.page_num)
-                            self.boxes = list(self.info_dict.keys())
-                            # 处理翻页到头情况
-                            if len(self.boxes) < 10 and (not self.last_flag):
-                                self.last_flag = True
-                                self.last_flag_num = self.page_num
-                        else:
-                            self.boxes = self.menu_dict
-                    break
-                except:
-                    self.dict_stack.pop()
-
-            # back to last menu
-            if c in [curses.KEY_LEFT, ord("h")]:
-                try:
-                    last_menu = self.dict_stack.pop()
-                    if callable(last_menu):
-                        # 处理翻页到头情况
-                        if self.last_flag:
-                            self.page_num = self.last_flag_num
-                            self.last_flag = False
-                        self.page_num = self.page_num - 1
-                        if self.page_num >= 0:
-                            self.info_dict = last_menu(self.page_num)
-                            self.boxes = list(self.info_dict.keys())
-                        else:
-                            self.menu_dict = self.dict_stack.pop()
+                            self.menu_dict = self.menu_dict.get(
+                                self.boxes[current_num])
+                        if isinstance(self.menu_dict, dict):
                             self.boxes = list(self.menu_dict.keys())
+                        else:
+                            # 利用函数一等对象特性（可能需要重构）
+                            if callable(self.menu_dict):
+                                if self.last_flag:
+                                    break
+                                self.dict_stack.append(self.menu_dict)
+                                self.page_num += 1
+                                self.info_dict = self.menu_dict(self.page_num)
+                                self.boxes = list(self.info_dict.keys())
+                                # 处理翻页到头情况
+                                if len(self.boxes) < 10 and (not self.last_flag):
+                                    self.last_flag = True
+                                    self.last_flag_num = self.page_num
+                            else:
+                                self.boxes = self.menu_dict
+                        break
+                    except:
+                        self.dict_stack.pop()
+
+                # back to last menu
+                if c in [curses.KEY_LEFT, ord("h")]:
+                    try:
+                        # stack pop
+                        last_menu = self.dict_stack.pop()
+                        if callable(last_menu):
+                            # 处理翻页到头情况
+                            if self.last_flag:
+                                self.page_num = self.last_flag_num
+                                self.last_flag = False
+                            self.page_num = self.page_num - 1
+                            if self.page_num >= 0:
+                                self.info_dict = last_menu(self.page_num)
+                                self.boxes = list(self.info_dict.keys())
+                            else:
+                                self.menu_dict = self.dict_stack.pop()
+                                self.boxes = list(self.menu_dict.keys())
+                        else:
+                            self.menu_dict = last_menu
+                            self.boxes = list(last_menu.keys())
+                        break
+                    except:
+                        pass
+                # 退出
+                if c == ord("q"):
+                    self._end_curses()
+                    self.player.q_mp3()
+                    return
+
+                # 打开浏览器查看
+                if c == ord("w"):
+                    try:
+                        info_list = self.info_dict.get(self.boxes[current_num])
+                        gcore_url = info_list[0]
+                        webbrowser.open(gcore_url)
+                    except:
+                        # 查看图片
+                        webbrowser.open(self.flow_img)
+
+                # 打开来源
+                if c == ord("o"):
+                    try:
+                        webbrowser.open(self.quote)
+                    except:
+                        pass
+
+                # 下载
+                if c == ord("d"):
+                    if self.dict_stack and callable(self.dict_stack[-1]):
+                        audio_name = self.boxes[current_num]
+                        info_list = self.info_dict.get(audio_name)
+                        # 下载当前MP3
+                        self.start_to_download(info_list[1], audio_name + ".mp3")
                     else:
-                        self.menu_dict = last_menu
-                        self.boxes = list(last_menu.keys())
-                    break
-                except:
-                    pass
-            # 退出
-            if c == ord("q"):
-                self._end_curses()
-                self.player.q_mp3()
-                return
+                        continue
 
-            # 打开浏览器查看
-            if c == ord("w"):
-                try:
-                    info_list = self.info_dict.get(self.boxes[current_num])
-                    gcore_url = info_list[0]
-                    webbrowser.open(gcore_url)
-                except:
-                    # 查看图片
-                    webbrowser.open(self.flow_img)
+                if c == ord('\n'):
+                    try:
+                        if self.player.popen_handler:
 
-            # 打开来源
-            if c == ord("o"):
-                try:
-                    webbrowser.open(self.quote)
-                except:
-                    pass
+                            if current_num == len(self.windows) - 1:
+                                webbrowser.open(self.flow_img)
+                                continue
+                            self.player.q_mp3()
+                            self.windows.pop()
+                        info_list = self.info_dict.get(self.boxes[current_num])
+                        # 播放当前选择的音乐
+                        self.start_to_play(info_list[1])
+                        # 生成播放信息
+                        audio_id = info_list[0].split("/")[-1]
+                        playing_info = playinfo_func(audio_id)
+                        time_flow_info = playing_info.get("audio_flow_info", "")
+                        self.djs_info = playing_info.get("audio_djs", "")
+                        self.flow_info = eval(time_flow_info)
+                        # 添加播放时间轴
+                        self._add_info_box()
+                    except:
+                        pass
 
-            # 下载
-            if c == ord("d"):
-                if self.dict_stack and callable(self.dict_stack[-1]):
-                    audio_name = self.boxes[current_num]
-                    info_list = self.info_dict.get(audio_name)
-                    # 下载当前MP3
-                    self.start_to_download(info_list[1], audio_name + ".mp3")
-                else:
-                    continue
+                # 暂停或继续播放
+                if c == ord(" "):
+                    self.player.pause_or_resume_mp3()
 
-            if c == ord('\n'):
-                try:
-                    if self.player.popen_handler:
+                # 快进/倒退
+                if c == ord("f"):
+                    self.player.forward_mp3(5)
 
-                        if current_num == len(self.windows) - 1:
-                            webbrowser.open(self.flow_img)
-                            continue
-                        self.player.q_mp3()
-                        self.windows.pop()
-                    info_list = self.info_dict.get(self.boxes[current_num])
-                    # 播放当前选择的音乐
-                    self.start_to_play(info_list[1])
-                    # 生成播放信息
-                    audio_id = info_list[0].split("/")[-1]
-                    playing_info = playinfo_func(audio_id)
-                    time_flow_info = playing_info.get("audio_flow_info", "")
-                    self.djs_info = playing_info.get("audio_djs", "")
-                    self.flow_info = eval(time_flow_info)
-                    # 添加播放时间轴
-                    self._add_info_box()
-                except:
-                    pass
+                # 播放时间轴
+                self._play_timeflow_info()
 
-            # 暂停或继续播放
-            if c == ord(" "):
-                self.player.pause_or_resume_mp3()
-
-            # 快进/倒退
-            if c == ord("f"):
-                self.player.forward_mp3(5)
-
-            # 播放时间轴
-            self._play_timeflow_info()
-
-        self.pick(self.boxes)
+            self.pick(self.boxes)
+        except: # handle ctrl + c break
+            self._end_curses()
+            self.player.q_mp3()
+            return
 
     def _play_timeflow_info(self):
 

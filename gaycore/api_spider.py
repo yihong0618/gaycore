@@ -4,7 +4,7 @@ from typing import Any, List
 
 import requests
 
-from config import (
+from gaycore.config import (
     AUDIO_API,
     AUDIOS_API,
     BASE_AUDIO_LINK_URL,

@@ -6,34 +6,16 @@ BOX_HEIGHT = 3
 PAD_WIDTH = 400
 PAD_HEIGHT = 1000
 
-ALI_BASE_URL = "http://172.105.194.204:3000"
-LOCAL_BASE_URL = "http://127.0.0.1:3000"
-API_URL = ALI_BASE_URL
-# API_URL = LOCAL_BASE_URL
 
 # ####### OFFICE API #############
 MP3_BASE_URL = "http://alioss.gcores.com/uploads/audio/"
 BASE_AUDIO_LINK_URL = "https://www.gcores.com/radios/"
 IMAGE_BASE_URL = "https://image.gcores.com/"
 AUDIOS_CATE_URL = "https://www.gcores.com/categories/"
-AUDIOS_API = "https://www.gcores.com/gapi/v1/radios?page[limit]={limit}&page[offset]={offset}&sort=-published-at&include=category"
+AUDIOS_API = "https://www.gcores.com/gapi/v1/radios?page[limit]={limit}&page[offset]={offset}&sort=-published-at&include=category&filter[list-all]=0"
 AUDIO_API = "https://www.gcores.com/gapi/v1/radios/{audio_id}?include=category,user,media,djs,media.timelines"
-USER_API = "https://www.gcores.com/gapi/v1/users/604"
-COMMENTS_API = "https://www.gcores.com/gapi/v1/radios/114477/comments"
-FOLLOWERS_API = (
-    "https://www.gcores.com/gapi/v1/users/21327/followers?page[limit]=12&page[offset]=0"
-)
+CATE_URL = "https://www.gcores.com/gapi/v1/categories/{cate_id}/radios?page[limit]={limit}&page[offset]={offset}&sort=-published-at&include=category,user,djs&filter[list-all]=0"
 
-
-# ######## SEVER API ##############
-API_PLAY_INFO = API_URL + "/audio/{}"
-API_RECENT = API_URL + "/audios/recent?page={}"
-API_HOT_COMMENT = API_URL + "/audios/hot/comment?page={}"
-API_HOT_LIKE = API_URL + "/audios/hot/like?page={}"
-API_CATEGORY = API_URL + "/audios/category/{}?page={}"
-API_TOPIC = API_URL + "/audios/topic/{}?page={}"
-API_ALL_DJS = API_URL + "/audios/alldjs"
-API_DJS = API_URL + "/audios/djs/{}?page={}"
 
 CATE_DICT = {
     "Gadio News": 45,

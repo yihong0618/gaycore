@@ -59,14 +59,30 @@ def make_djs_dict_func(top_djs):
     return djs_dict
 
 
-# 主播字典
-API_DJS_DICT = make_djs_dict_func(get_top_djs())
+def get_audios_info(API, offset=0):
+    r = requests.get(API.format(limit=10, offset=offset))
+    if not r:
+        print(r.text)
+        return []
+    response_json = r.json()
+    audio_info_dict = response_json["data"]
+    results_dict = {}
+    for d in audio_info_dict:
+        attributes = d["attributes"]
+        results_dict[attributes["title"]] = d["id"]
+    return results_dict
 
-# 分类字典
-API_CATEGORY_DICT = make_base_dict_func(CATE_DICT, API_CATEGORY)
-API_TOPIC_DICT = make_base_dict_func(TOPIC_DICT, API_TOPIC)
 
-recent_func = partial(api_make_name_mp3_dict, API_RECENT)
-hot_comment_func = partial(api_make_name_mp3_dict, API_HOT_COMMENT)
-hot_like_func = partial(api_make_name_mp3_dict, API_HOT_LIKE)
-playinfo_func = partial(api_get_play_info, API_PLAY_INFO)
+recent_func = partial(get_audios_info, AUDIOS_API)
+
+# # 主播字典
+# API_DJS_DICT = make_djs_dict_func(get_top_djs())
+
+# # 分类字典
+# API_CATEGORY_DICT = make_base_dict_func(CATE_DICT, API_CATEGORY)
+# API_TOPIC_DICT = make_base_dict_func(TOPIC_DICT, API_TOPIC)
+
+# recent_func = partial(api_make_name_mp3_dict, API_RECENT)
+# hot_comment_func = partial(api_make_name_mp3_dict, API_HOT_COMMENT)
+# hot_like_func = partial(api_make_name_mp3_dict, API_HOT_LIKE)
+# playinfo_func = partial(api_get_play_info, API_PLAY_INFO)
