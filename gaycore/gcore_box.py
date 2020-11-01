@@ -1,21 +1,21 @@
 # Author: Yi Hong
 # Date: 2019.01.29
 import curses
-import datetime
-import os
-import sys
 import threading
 import time
 import webbrowser
 
-from gaycore.config import *
+from gaycore.config import BOX_HEIGHT, BOX_WIDTH, PAD_HEIGHT, PAD_WIDTH, AUDIO_API
 from gaycore.player import Player
-# from gaycore.utils import (API_CATEGORY_DICT, API_DJS_DICT, API_TOPIC_DICT,
-#                            BASE_AUDIO_CATE_URL, TOPIC_DICT, chunkstring,
-#                            hot_comment_func, hot_like_func, playinfo_func,
-#                            recent_func)
-
-from gaycore.utils import recent_func
+from gaycore.utils import (
+    get_audio_info,
+    recent_func,
+    chunkstring,
+    likes_func,
+    comments_func,
+    bookmarks_func,
+    make_cate_dict,
+)
 
 try:
     from urllib.request import urlretrieve
@@ -23,18 +23,14 @@ except:
     from urllib import urlretrieve
 
 
-
-
 MENU_DICT = {
     "最近电台": recent_func,
-    "主播电台": {"a":2},
-    "分类电台": {"b":2},
-    "最热电台": {"c":2},
+    "分类电台": make_cate_dict(),
+    "最热电台": {"点赞排行": likes_func, "收藏排行": bookmarks_func, "评论排行": comments_func},
 }
 
 
 class GcoreBox:
-
     def __init__(self):
         self.BOX_WIDTH = BOX_WIDTH
         self.BOX_HEIGHT = BOX_HEIGHT
@@ -43,7 +39,6 @@ class GcoreBox:
         self.PAD_HEIGHT = PAD_HEIGHT
         self.windows = []
         self.flow_info = {}
-        self.cache_dict = {}
         self.flow_img = ""
         self.quote = ""
         self.last_flag = False
@@ -78,7 +73,11 @@ class GcoreBox:
         height = 1
         for num, text in enumerate(boxes, 1):
             box = self.pad.derwin(
-                self.BOX_HEIGHT, self.BOX_WIDTH, height, self.PAD_WIDTH//2 - self.BOX_WIDTH//2)
+                self.BOX_HEIGHT,
+                self.BOX_WIDTH,
+                height,
+                self.PAD_WIDTH // 2 - self.BOX_WIDTH // 2,
+            )
             box.box()
             if len(text) > 37:
                 text = text[:36] + "..."
@@ -91,8 +90,7 @@ class GcoreBox:
         cy, cx = window.getbegyx()
         maxy, maxx = self.stdscr.getmaxyx()
         self.pad.timeout(-1)
-        self.pad.refresh(cy, cx, 1, maxx//2 -
-                         self.BOX_WIDTH//2, maxy-1, maxx-1)
+        self.pad.refresh(cy, cx, 1, maxx // 2 - self.BOX_WIDTH // 2, maxy - 1, maxx - 1)
         return (cy, cx)
 
     def _end_curses(self):
@@ -103,35 +101,34 @@ class GcoreBox:
         curses.endwin()
 
     def start_to_play(self, url):
-        thread = threading.Thread(target=self.player.run_mpg123, args=(url, ))
+        thread = threading.Thread(target=self.player.run_mpg123, args=(url,))
         thread.start()
-        time.sleep(0.01)
+        time.sleep(0.1)
         return thread
 
     def start_to_download(self, mp3_url, audio_name):
-        thread = threading.Thread(
-            target=self._download_mp3, args=(mp3_url, audio_name))
+        thread = threading.Thread(target=self._download_mp3, args=(mp3_url, audio_name))
         thread.start()
 
     def mainloop(self):
 
         try:
-            topy, topx = self._center(self.windows[0])
+            topy, _ = self._center(self.windows[0])
 
             current_num = 0
             last = 1
             top = self.windows[0]
             while True:
-                self.windows[current_num].bkgd(curses.color_pair(1))
                 # 处理只有一个box的情况
                 if len(self.windows) == 1:
                     last = 0
                 self.windows[last].bkgd(curses.color_pair(2))
+                self.windows[current_num].bkgd(curses.color_pair(1))
 
-                maxy, maxx = self.stdscr.getmaxyx()
-                cy, cx = self.windows[current_num].getbegyx()
+                maxy, _ = self.stdscr.getmaxyx()
+                cy, _ = self.windows[current_num].getbegyx()
 
-                if ((topy + maxy - self.BOX_HEIGHT) <= cy):
+                if (topy + maxy - self.BOX_HEIGHT) <= cy:
                     top = self.windows[current_num]
 
                 if topy >= cy + self.BOX_HEIGHT:
@@ -140,19 +137,21 @@ class GcoreBox:
                 if last != current_num:
                     last = current_num
 
-                topy, topx = self._center(top)
+                topy, _ = self._center(top)
                 c = self.stdscr.getch()
 
                 if c == curses.KEY_RESIZE:
                     self.stdscr.clear()
 
                 if c in [ord("j"), curses.KEY_DOWN]:
-                    current_num = current_num + \
-                        1 if current_num < len(self.windows) - 1 else 0
+                    current_num = (
+                        current_num + 1 if current_num < len(self.windows) - 1 else 0
+                    )
 
                 if c in [ord("k"), curses.KEY_UP]:
-                    current_num = current_num - \
-                        1 if current_num > 0 else len(self.windows) - 1
+                    current_num = (
+                        current_num - 1 if current_num > 0 else len(self.windows) - 1
+                    )
 
                 # enter the menu selected
                 if c in [curses.KEY_RIGHT, ord("l")]:
@@ -160,8 +159,7 @@ class GcoreBox:
                         if not callable(self.menu_dict):
                             self.page_num = -1  # 恢复翻页处理，翻页过多的问题
                             self.dict_stack.append(self.menu_dict)
-                            self.menu_dict = self.menu_dict.get(
-                                self.boxes[current_num])
+                            self.menu_dict = self.menu_dict.get(self.boxes[current_num])
                         if isinstance(self.menu_dict, dict):
                             self.boxes = list(self.menu_dict.keys())
                         else:
@@ -233,13 +231,13 @@ class GcoreBox:
                 if c == ord("d"):
                     if self.dict_stack and callable(self.dict_stack[-1]):
                         audio_name = self.boxes[current_num]
-                        info_list = self.info_dict.get(audio_name)
-                        # 下载当前MP3
-                        self.start_to_download(info_list[1], audio_name + ".mp3")
-                    else:
-                        continue
+                        audio_id = self.info_dict.get(audio_name)
+                        _, mp3_url = get_audio_info(AUDIO_API, audio_id)
 
-                if c == ord('\n'):
+                        # 下载当前MP3
+                        self.start_to_download(mp3_url, audio_name + ".mp3")
+
+                if c == ord("\n"):
                     try:
                         if self.player.popen_handler:
 
@@ -248,18 +246,16 @@ class GcoreBox:
                                 continue
                             self.player.q_mp3()
                             self.windows.pop()
-                        info_list = self.info_dict.get(self.boxes[current_num])
+                        audio_id = self.info_dict.get(self.boxes[current_num])
+                        flow_info, mp3_url = get_audio_info(AUDIO_API, audio_id)
                         # 播放当前选择的音乐
-                        self.start_to_play(info_list[1])
+                        self.start_to_play(mp3_url)
                         # 生成播放信息
-                        audio_id = info_list[0].split("/")[-1]
-                        playing_info = playinfo_func(audio_id)
-                        time_flow_info = playing_info.get("audio_flow_info", "")
-                        self.djs_info = playing_info.get("audio_djs", "")
-                        self.flow_info = eval(time_flow_info)
+                        self.flow_info = flow_info
                         # 添加播放时间轴
                         self._add_info_box()
-                    except:
+                    except Exception as e:
+                        print(str(e))
                         pass
 
                 # 暂停或继续播放
@@ -274,41 +270,42 @@ class GcoreBox:
                 self._play_timeflow_info()
 
             self.pick(self.boxes)
-        except: # handle ctrl + c break
+        except Exception as e:
+            # handle ctrl + c break
+            print(str(e))
             self._end_curses()
             self.player.q_mp3()
             return
 
     def _play_timeflow_info(self):
 
-        # 解析主播格式
-        def f_parser(x): return ', '.join([i[0] for i in eval(x)])
-
         # 播放时间轴
         if self.player.popen_handler:
-            flow_info = dict(self.flow_info.get(
-                self.player.process_length, ""))
-            djs_info = f_parser(self.djs_info)[:50]
+            flow_info = dict(self.flow_info.get(self.player.process_length, ""))
             self.windows[-1].box()
             self.windows[-1].addstr(1, 1, "时间轴")
-            self.windows[-1].addstr(1, self.BOX_WIDTH//2-25, "主播:" + djs_info)
-            # play_time = str(datetime.timedelta(
-            #    seconds=self.player.process_length))
-            play_time_hrs, play_time_min = divmod(
-                self.player.process_location, 3600)
-            play_time_min, play_time_sec = divmod(
-                self.player.process_location, 60)
+            play_time_hrs, play_time_min = divmod(self.player.process_location, 3600)
+            play_time_min, play_time_sec = divmod(self.player.process_location, 60)
 
-            self.windows[-1].addstr(3, 1, "time:  " + str(play_time_hrs).zfill(
-                2) + ':' + str(play_time_min).zfill(2) + ':' + str(play_time_sec).zfill(2))
+            self.windows[-1].addstr(
+                3,
+                1,
+                "time:  "
+                + str(play_time_hrs).zfill(2)
+                + ":"
+                + str(play_time_min).zfill(2)
+                + ":"
+                + str(play_time_sec).zfill(2),
+            )
             if flow_info.get("content"):
                 try:
                     self.flow_img = flow_info.get("img", "")
                     self.quote = flow_info.get("quote_href", "")
                     self.windows[-1].clear()
                     self.windows[-1].bkgd(curses.color_pair(2))
-                    self.windows[-1].addstr(4, 1, "title: " +
-                                            flow_info.get("title", ""))
+                    self.windows[-1].addstr(
+                        4, 1, "title: " + flow_info.get("title", "")
+                    )
                     self.windows[-1].addstr(5, 1, "content:")
                     content = flow_info.get("content", "")
                     # 去掉换行符
@@ -325,8 +322,12 @@ class GcoreBox:
                     pass
 
     def _add_info_box(self):
-        box = self.pad.derwin(self.BOX_HEIGHT*5, self.BOX_WIDTH,
-                              self.max_height, self.PAD_WIDTH//2 - self.BOX_WIDTH//2)
+        box = self.pad.derwin(
+            self.BOX_HEIGHT * 5,
+            self.BOX_WIDTH,
+            self.max_height,
+            self.PAD_WIDTH // 2 - self.BOX_WIDTH // 2,
+        )
         box.box()
         self.windows.append(box)
 
@@ -334,11 +335,12 @@ class GcoreBox:
 
         # 下载进度
         def report(count, blockSize, totalSize):
-            percent = int(count*blockSize*100/totalSize)
-            self.stdscr.addstr(0, 0, "\r%d%%" % percent + ' complete')
+            percent = int(count * blockSize * 100 / totalSize)
+            self.stdscr.addstr(0, 0, "\r%d%%" % percent + " complete")
+
         try:
             urlretrieve(mp3_url, audio_name, reporthook=report)
-            self.stdscr.addstr(0, 0, audio_name + ': 下载完成')
+            self.stdscr.addstr(0, 0, audio_name + ": 下载完成")
             time.sleep(1)
             self.stdscr.clear()
         except:

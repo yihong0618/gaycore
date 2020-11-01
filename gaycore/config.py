@@ -11,10 +11,9 @@ PAD_HEIGHT = 1000
 MP3_BASE_URL = "http://alioss.gcores.com/uploads/audio/"
 BASE_AUDIO_LINK_URL = "https://www.gcores.com/radios/"
 IMAGE_BASE_URL = "https://image.gcores.com/"
-AUDIOS_CATE_URL = "https://www.gcores.com/categories/"
 AUDIOS_API = "https://www.gcores.com/gapi/v1/radios?page[limit]={limit}&page[offset]={offset}&sort=-published-at&include=category&filter[list-all]=0"
 AUDIO_API = "https://www.gcores.com/gapi/v1/radios/{audio_id}?include=category,user,media,djs,media.timelines"
-CATE_URL = "https://www.gcores.com/gapi/v1/categories/{cate_id}/radios?page[limit]={limit}&page[offset]={offset}&sort=-published-at&include=category,user,djs&filter[list-all]=0"
+AUDIOS_CATE_API = "https://www.gcores.com/gapi/v1/categories/{cate_id}/radios?page[limit]={limit}&page[offset]={offset}&sort=-published-at&include=category,user,djs&filter[list-all]=0"
 
 
 CATE_DICT = {

@@ -1,10 +1,7 @@
-import curses
-import time
 import subprocess
 
 
 class Player:
-
     def __init__(self):
         self.popen_handler = None
         self.process_location = 0
@@ -32,7 +29,7 @@ class Player:
                 out = strout.split(" ")
                 self.process_location = int(float(out[3]))
                 self.process_length = int(float(out[3]) + float(out[4]))
-                if(float(out[3]) != 0):
+                if float(out[3]) != 0:
                     self.fps = float(out[1]) / float(out[3])
 
             elif strout == "@P 0":
@@ -56,7 +53,8 @@ class Player:
         if not self.popen_handler:
             return
         self.popen_handler.stdin.write(
-            b"J +" + str(seconds*int(self.fps)).encode("utf-8") + b"\n")
+            b"J +" + str(seconds * int(self.fps)).encode("utf-8") + b"\n"
+        )
         self.popen_handler.stdin.flush()
 
     # 退出播放

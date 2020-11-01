@@ -1,66 +1,20 @@
 #!/usr/bin/env python # encoding: utf-8
-
-import json
-from collections import Counter
+from collections import defaultdict
 from functools import partial
 import requests
-from gaycore.config import *
+from gaycore.config import IMAGE_BASE_URL, MP3_BASE_URL, AUDIOS_API, CATE_DICT, AUDIOS_CATE_API
 
 
 # func to format the content
 def chunkstring(string, length):
-    return [string[0+i:length+i] for i in range(0, len(string), length)]
+    return [string[0 + i: length + i] for i in range(0, len(string), length)]
 
 
-def api_make_name_mp3_dict(api, name='', page=0):
-
-    results_dict = {}
-    info_json = requests.get(api.format(name, page)).text
-    info_list = json.loads(info_json).get("result", [])
-    for info in info_list:
-        results_dict[info.get("audio_name")] = (
-            info.get("audio_url", ""), info.get("audio_mp3_url", ""))
-    return results_dict
-
-
-def api_get_play_info(api, audio_id):
-    info_json = requests.get(api.format(audio_id)).text
-    info_list = json.loads(info_json).get("result", [])
-    return info_list
-
-
-def make_base_dict_func(BASE_DICT, API):
-    category_dict = {}
-    for cate_name, cate_name_num in BASE_DICT.items():
-        category_dict[cate_name] = partial(
-            api_make_name_mp3_dict, API, cate_name_num)
-    return category_dict
-
-
-def get_top_djs(limit=50):
-    info_json = requests.get(API_ALL_DJS).text
-    result = json.loads(info_json).get("result", [])
-    result = [eval(i) for i in result]
-
-    def make_result():
-        for i in result:
-            for j in i:
-                yield j
-
-    top_djs = Counter(list(make_result())).most_common(limit)
-    return dict(top_djs)
-
-
-def make_djs_dict_func(top_djs):
-    djs_dict = {}
-    for i, j in top_djs.items():
-        djs_dict[i[0]+"    电台数量" +
-                 str(j)] = partial(api_make_name_mp3_dict, API_DJS, i[0])
-    return djs_dict
-
-
-def get_audios_info(API, offset=0):
-    r = requests.get(API.format(limit=10, offset=offset))
+def get_audios_info(API, offset=0, sort="-published-at", cate_id=None):
+    if not cate_id:
+        r = requests.get(API.format(sort=sort, limit=10, offset=offset))
+    else:
+        r = requests.get(API.format(cate_id=cate_id, limit=10, offset=offset))
     if not r:
         print(r.text)
         return []
@@ -73,16 +27,64 @@ def get_audios_info(API, offset=0):
     return results_dict
 
 
+def paser_timeflow(timelines_dict):
+    """
+    获取时间轴用于播放的展示
+    """
+    timestamp_dict = defaultdict(dict)
+    timelines_dict = timelines_dict["attributes"]
+    try:
+        flow_time_key = timelines_dict.get("at")
+        timestamp_dict[flow_time_key]["title"] = timelines_dict.get("title", "")
+        timestamp_dict[flow_time_key]["content"] = timelines_dict.get("content", "")
+        timestamp_dict[flow_time_key]["quote_href"] = timelines_dict.get(
+            "quote-href", ""
+        )
+        timestamp_dict[flow_time_key]["img"] = IMAGE_BASE_URL + (
+            timelines_dict.get("asset", {}) or ""
+        )
+        return timestamp_dict
+    except Exception as e:
+        raise ("parser_timefoow error {}".format(e))
+
+
+def parser_djs(users_dict):
+    try:
+        return users_dict["id"], users_dict["attributes"]["nickname"]
+    except Exception as e:
+        raise ("parser_djs error {}".format(e))
+
+
+def parser_mp3_url(medias_dict):
+    try:
+        return MP3_BASE_URL + medias_dict["attributes"]["audio"]
+    except Exception as e:
+        raise ("parser_mp3_url error {}".format(e))
+
+
+def get_audio_info(API, audio_id):
+    flow_dict = {}
+    r = requests.get(API.format(audio_id=audio_id))
+    if not r:
+        return []
+    audio_mp3_url = ""
+    included = r.json()["included"]
+    for i in included:
+        if i["type"] == "timelines":
+            flow_dict.update(paser_timeflow(i))
+        if i["type"] == "medias":
+            audio_mp3_url = parser_mp3_url(i)
+        else:
+            continue
+    return flow_dict, audio_mp3_url
+
+
+def make_cate_dict():
+    return {
+        k: partial(get_audios_info, AUDIOS_CATE_API, cate_id=v) for k, v in CATE_DICT.items()}
+
+
 recent_func = partial(get_audios_info, AUDIOS_API)
-
-# # 主播字典
-# API_DJS_DICT = make_djs_dict_func(get_top_djs())
-
-# # 分类字典
-# API_CATEGORY_DICT = make_base_dict_func(CATE_DICT, API_CATEGORY)
-# API_TOPIC_DICT = make_base_dict_func(TOPIC_DICT, API_TOPIC)
-
-# recent_func = partial(api_make_name_mp3_dict, API_RECENT)
-# hot_comment_func = partial(api_make_name_mp3_dict, API_HOT_COMMENT)
-# hot_like_func = partial(api_make_name_mp3_dict, API_HOT_LIKE)
-# playinfo_func = partial(api_get_play_info, API_PLAY_INFO)
+likes_func = partial(get_audios_info, AUDIOS_API, sort="-likes-count")
+comments_func = partial(get_audios_info, AUDIOS_API, sort="-comments-count")
+bookmarks_func = partial(get_audios_info, AUDIOS_API, sort="-bookmarks-count")

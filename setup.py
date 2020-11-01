@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-VERSION = '1.2.3'
+VERSION = '2.0'
 
 setup(name='gaycore',
       version=VERSION,
@@ -17,7 +17,7 @@ setup(name='gaycore',
       include_package_data=True,
       zip_safe=True,
       install_requires=[
-          'requests', 'PyMySQL', 'SQLAlchemy'
+          'requests'
       ],
       classifiers=[
           "Development Status :: 4 - Beta",
@@ -32,6 +32,6 @@ setup(name='gaycore',
       ],
       entry_points={
           'console_scripts': [
-              'gaycore = gaycore.main:run'
+              'gaycore = gaycore.cli:run'
           ], }
       )
