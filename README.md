@@ -1,6 +1,3 @@
-!!!注意，本项目目前已经down, 因为机核网站的更新。
-我之后会对项目进行重构。
-
 
 # 请更新 pip(pip3) install -U gaycore
 # 命令行听机核，你值得拥有（Linux Mac）
