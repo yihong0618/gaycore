@@ -2,12 +2,18 @@
 from collections import defaultdict
 from functools import partial
 import requests
-from gaycore.config import IMAGE_BASE_URL, MP3_BASE_URL, AUDIOS_API, CATE_DICT, AUDIOS_CATE_API
+from gaycore.config import (
+    IMAGE_BASE_URL,
+    MP3_BASE_URL,
+    AUDIOS_API,
+    CATE_DICT,
+    AUDIOS_CATE_API,
+)
 
 
 # func to format the content
 def chunkstring(string, length):
-    return [string[0 + i: length + i] for i in range(0, len(string), length)]
+    return [string[0 + i : length + i] for i in range(0, len(string), length)]
 
 
 def get_audios_info(API, offset=0, sort="-published-at", cate_id=None):
@@ -16,7 +22,6 @@ def get_audios_info(API, offset=0, sort="-published-at", cate_id=None):
     else:
         r = requests.get(API.format(cate_id=cate_id, limit=10, offset=offset))
     if not r:
-        print(r.text)
         return []
     response_json = r.json()
     audio_info_dict = response_json["data"]
@@ -81,7 +86,9 @@ def get_audio_info(API, audio_id):
 
 def make_cate_dict():
     return {
-        k: partial(get_audios_info, AUDIOS_CATE_API, cate_id=v) for k, v in CATE_DICT.items()}
+        k: partial(get_audios_info, AUDIOS_CATE_API, cate_id=v)
+        for k, v in CATE_DICT.items()
+    }
 
 
 recent_func = partial(get_audios_info, AUDIOS_API)

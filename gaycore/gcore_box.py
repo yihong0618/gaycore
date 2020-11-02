@@ -246,16 +246,16 @@ class GcoreBox:
                                 continue
                             self.player.q_mp3()
                             self.windows.pop()
-                        audio_id = self.info_dict.get(self.boxes[current_num])
-                        flow_info, mp3_url = get_audio_info(AUDIO_API, audio_id)
-                        # 播放当前选择的音乐
-                        self.start_to_play(mp3_url)
-                        # 生成播放信息
-                        self.flow_info = flow_info
-                        # 添加播放时间轴
-                        self._add_info_box()
+                        if self.info_dict:
+                            audio_id = self.info_dict.get(self.boxes[current_num])
+                            flow_info, mp3_url = get_audio_info(AUDIO_API, audio_id)
+                            # 播放当前选择的音乐
+                            self.start_to_play(mp3_url)
+                            # 生成播放信息
+                            self.flow_info = flow_info
+                            # 添加播放时间轴
+                            self._add_info_box()
                     except Exception as e:
-                        print(str(e))
                         pass
 
                 # 暂停或继续播放
@@ -270,9 +270,8 @@ class GcoreBox:
                 self._play_timeflow_info()
 
             self.pick(self.boxes)
-        except Exception as e:
+        except:
             # handle ctrl + c break
-            print(str(e))
             self._end_curses()
             self.player.q_mp3()
             return

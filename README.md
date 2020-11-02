@@ -2,7 +2,7 @@
 # 请更新 pip(pip3) install -U gaycore
 # 命令行听机核，你值得拥有（Linux Mac）
 
-命令行听机核，给你不一样的体验, 灵感来源于musicbox, Python3编写
+命令行听机核，给你不一样的体验, 灵感来源于 musicbox, Python3 编写
 支持时间轴！
 ![gaycore-gif](https://github.com/yihong0618/gaycore/blob/master/img/gcore1.gif)
 

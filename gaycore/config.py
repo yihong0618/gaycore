@@ -29,8 +29,6 @@ CATE_DICT = {
     "广告节目": 62,
 }
 
-TOPIC_DICT = {"辐射": "辐射", "战锤": "战锤", "魔兽": "魔兽", "通识": "通识"}
-
 BASE_AUDIO_CATE_URL = "https://www.gcores.com/categories/9/originals"
 BASE_AUDIO_LINK_URL = "https://www.gcores.com/radios/"
 TEST_AUDIO_LINK = "https://www.gcores.com/radios/105962"
