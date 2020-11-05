@@ -3,6 +3,12 @@ import subprocess
 
 class Player:
     def __init__(self):
+        """
+        Initialize the process.
+
+        Args:
+            self: (todo): write your description
+        """
         self.popen_handler = None
         self.process_location = 0
         self.process_length = 0
@@ -10,6 +16,15 @@ class Player:
 
     # 参考musicibox代码
     def run_mpg123(self, url, expires=-1, get_time=-1):
+        """
+        Run mpg123
+
+        Args:
+            self: (todo): write your description
+            url: (str): write your description
+            expires: (todo): write your description
+            get_time: (int): write your description
+        """
         para = ["mpg123", "-R"] + []
         self.popen_handler = subprocess.Popen(
             para, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -43,6 +58,12 @@ class Player:
 
     # 停止播放
     def pause_or_resume_mp3(self):
+        """
+        Pause or close the process.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.popen_handler:
             return
         self.popen_handler.stdin.write(b"P\n")
@@ -50,6 +71,13 @@ class Player:
 
     # 快进/倒退10s
     def forward_mp3(self, seconds):
+        """
+        Forward a forward message.
+
+        Args:
+            self: (todo): write your description
+            seconds: (todo): write your description
+        """
         if not self.popen_handler:
             return
         self.popen_handler.stdin.write(
@@ -59,6 +87,12 @@ class Player:
 
     # 退出播放
     def q_mp3(self):
+        """
+        Kill the wsdl3.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.popen_handler:
             self.popen_handler.stdin.write(b"Q\n")
             self.popen_handler.stdin.flush()
