@@ -13,10 +13,26 @@ from gaycore.config import (
 
 # func to format the content
 def chunkstring(string, length):
+    """
+    Chunk a string into chunks.
+
+    Args:
+        string: (str): write your description
+        length: (int): write your description
+    """
     return [string[0 + i : length + i] for i in range(0, len(string), length)]
 
 
 def get_audios_info(API, offset=0, sort="-published-at", cate_id=None):
+    """
+    Get a list of a device.
+
+    Args:
+        API: (todo): write your description
+        offset: (int): write your description
+        sort: (str): write your description
+        cate_id: (str): write your description
+    """
     if not cate_id:
         r = requests.get(API.format(sort=sort, limit=10, offset=offset))
     else:
@@ -54,6 +70,12 @@ def paser_timeflow(timelines_dict):
 
 
 def parser_djs(users_dict):
+    """
+    : param users_dict.
+
+    Args:
+        users_dict: (todo): write your description
+    """
     try:
         return users_dict["id"], users_dict["attributes"]["nickname"]
     except Exception as e:
@@ -61,6 +83,12 @@ def parser_djs(users_dict):
 
 
 def parser_mp3_url(medias_dict):
+    """
+    Parse url.
+
+    Args:
+        medias_dict: (dict): write your description
+    """
     try:
         return MP3_BASE_URL + medias_dict["attributes"]["audio"]
     except Exception as e:
@@ -68,6 +96,13 @@ def parser_mp3_url(medias_dict):
 
 
 def get_audio_info(API, audio_id):
+    """
+    Get flow information
+
+    Args:
+        API: (todo): write your description
+        audio_id: (str): write your description
+    """
     flow_dict = {}
     r = requests.get(API.format(audio_id=audio_id))
     if not r:
@@ -85,6 +120,11 @@ def get_audio_info(API, audio_id):
 
 
 def make_cate_dict():
+    """
+    Return a dict with information about the audit.
+
+    Args:
+    """
     return {
         k: partial(get_audios_info, AUDIOS_CATE_API, cate_id=v)
         for k, v in CATE_DICT.items()

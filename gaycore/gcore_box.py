@@ -32,6 +32,12 @@ MENU_DICT = {
 
 class GcoreBox:
     def __init__(self):
+        """
+        Initialize game
+
+        Args:
+            self: (todo): write your description
+        """
         self.BOX_WIDTH = BOX_WIDTH
         self.BOX_HEIGHT = BOX_HEIGHT
 
@@ -49,6 +55,12 @@ class GcoreBox:
         self._init_curses()
 
     def _init_curses(self):
+        """
+        Initialize the screen.
+
+        Args:
+            self: (todo): write your description
+        """
         self.stdscr = curses.initscr()
         self.stdscr.keypad(1)
         curses.noecho()
@@ -66,6 +78,13 @@ class GcoreBox:
         self.stdscr.refresh()
 
     def make_text_box(self, boxes):
+        """
+        Create a box box.
+
+        Args:
+            self: (todo): write your description
+            boxes: (list): write your description
+        """
         self.boxes = boxes
         self.pad = curses.newpad(self.PAD_WIDTH, self.PAD_HEIGHT)
 
@@ -87,6 +106,13 @@ class GcoreBox:
         self.max_height = height
 
     def _center(self, window):
+        """
+        Center a tuple of the image.
+
+        Args:
+            self: (todo): write your description
+            window: (todo): write your description
+        """
         cy, cx = window.getbegyx()
         maxy, maxx = self.stdscr.getmaxyx()
         self.pad.timeout(-1)
@@ -101,16 +127,37 @@ class GcoreBox:
         curses.endwin()
 
     def start_to_play(self, url):
+        """
+        Starts a new thread.
+
+        Args:
+            self: (todo): write your description
+            url: (str): write your description
+        """
         thread = threading.Thread(target=self.player.run_mpg123, args=(url,))
         thread.start()
         time.sleep(0.1)
         return thread
 
     def start_to_download(self, mp3_url, audio_name):
+        """
+        Starts a thread.
+
+        Args:
+            self: (todo): write your description
+            mp3_url: (str): write your description
+            audio_name: (str): write your description
+        """
         thread = threading.Thread(target=self._download_mp3, args=(mp3_url, audio_name))
         thread.start()
 
     def mainloop(self):
+        """
+        Main loop.
+
+        Args:
+            self: (todo): write your description
+        """
 
         try:
             topy, _ = self._center(self.windows[0])
@@ -277,6 +324,12 @@ class GcoreBox:
             return
 
     def _play_timeflow_info(self):
+        """
+        Play player info
+
+        Args:
+            self: (todo): write your description
+        """
 
         # 播放时间轴
         if self.player.popen_handler:
@@ -321,6 +374,12 @@ class GcoreBox:
                     pass
 
     def _add_info_box(self):
+        """
+        Add the info box
+
+        Args:
+            self: (todo): write your description
+        """
         box = self.pad.derwin(
             self.BOX_HEIGHT * 5,
             self.BOX_WIDTH,
@@ -331,9 +390,25 @@ class GcoreBox:
         self.windows.append(box)
 
     def _download_mp3(self, mp3_url, audio_name):
+        """
+        Downloads a mp3 report.
+
+        Args:
+            self: (str): write your description
+            mp3_url: (str): write your description
+            audio_name: (str): write your description
+        """
 
         # 下载进度
         def report(count, blockSize, totalSize):
+            """
+            Print the total size
+
+            Args:
+                count: (int): write your description
+                blockSize: (int): write your description
+                totalSize: (int): write your description
+            """
             percent = int(count * blockSize * 100 / totalSize)
             self.stdscr.addstr(0, 0, "\r%d%%" % percent + " complete")
 
@@ -346,6 +421,13 @@ class GcoreBox:
             self.stdscr.addstr(0, 0, "download error")
 
     def pick(self, boxes):
+        """
+        Pick a pickled box is opened.
+
+        Args:
+            self: (todo): write your description
+            boxes: (list): write your description
+        """
         self.windows = list(self.make_text_box(boxes))
         if self.player.popen_handler:
             self._add_info_box()
