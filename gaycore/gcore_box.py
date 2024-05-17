@@ -4,6 +4,7 @@ import curses
 import threading
 import time
 import webbrowser
+import subprocess
 
 from gaycore.config import BOX_HEIGHT, BOX_WIDTH, PAD_HEIGHT, PAD_WIDTH, AUDIO_API
 from gaycore.player import Player
@@ -11,10 +12,8 @@ from gaycore.utils import (
     get_audio_info,
     recent_func,
     chunkstring,
-    likes_func,
-    comments_func,
-    bookmarks_func,
     make_cate_dict,
+    make_playlist_dict,
 )
 
 try:
@@ -26,7 +25,7 @@ except:
 MENU_DICT = {
     "最近电台": recent_func,
     "分类电台": make_cate_dict(),
-    "最热电台": {"点赞排行": likes_func, "收藏排行": bookmarks_func, "评论排行": comments_func},
+    "机核播单": make_playlist_dict(),
 }
 
 
@@ -43,7 +42,7 @@ class GcoreBox:
         self.quote = ""
         self.last_flag = False
         self.menu_dict = MENU_DICT
-        self.dict_stack = []  # 定义一个stack 方便进入下个目录和返回下个目录
+        self.dict_stack = []  # 定义一个 stack 方便进入下个目录和返回下个目录
         self.page_num = -1  # 用于翻页
         self.player = Player()
         self._init_curses()
@@ -94,7 +93,7 @@ class GcoreBox:
         return (cy, cx)
 
     def _end_curses(self):
-        """ Terminates the curses application. """
+        """Terminates the curses application."""
         curses.nocbreak()
         self.stdscr.keypad(0)
         curses.echo()
@@ -257,6 +256,21 @@ class GcoreBox:
                             self._add_info_box()
                     except Exception as e:
                         pass
+                if c == ord("m"):
+                    try:
+                        audio_id = self.info_dict.get(self.boxes[current_num])
+                        _, mp3_url = get_audio_info(AUDIO_API, audio_id)
+                        # 播放当前选择的音乐
+                        subprocess.check_output(["micli", "play", mp3_url])
+                        self._add_info_box()
+                        self.windows[-1].box()
+                        self.windows[-1].addstr(
+                            1, 1, f"  正在用小爱播放\n  : {self.boxes[current_num]}"
+                        )
+                    except Exception as e:
+                        pass
+                if c == ord("p"):
+                    subprocess.check_output(["micli", "stop"])
 
                 # 暂停或继续播放
                 if c == ord(" "):

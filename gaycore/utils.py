@@ -6,9 +6,13 @@ from gaycore.config import (
     IMAGE_BASE_URL,
     MP3_BASE_URL,
     AUDIOS_API,
+    PLAYLIST_API,
     CATE_DICT,
+    PLAYLIST_DICT,
     AUDIOS_CATE_API,
+    AUDIO_PLAYLIST_URL,
 )
+from rich import print
 
 
 # func to format the content
@@ -16,13 +20,18 @@ def chunkstring(string, length):
     return [string[0 + i : length + i] for i in range(0, len(string), length)]
 
 
-def get_audios_info(API, offset=0, sort="-published-at", cate_id=None):
-    if not cate_id:
-        r = requests.get(API.format(sort=sort, limit=10, offset=offset))
-    else:
+def get_audios_info(
+    API, offset=0, sort="-published-at", playlist_id=None, cate_id=None
+):
+    if cate_id:
         r = requests.get(API.format(cate_id=cate_id, limit=10, offset=offset))
+    elif playlist_id:
+        r = requests.get(API.format(playlist_id=playlist_id, limit=10, offset=offset))
+    else:
+        r = requests.get(API.format(sort=sort, limit=10, offset=offset))
     if not r:
         return []
+
     response_json = r.json()
     audio_info_dict = response_json["data"]
     results_dict = {}
@@ -89,6 +98,21 @@ def make_cate_dict():
         k: partial(get_audios_info, AUDIOS_CATE_API, cate_id=v)
         for k, v in CATE_DICT.items()
     }
+
+
+def make_playlist_dict():
+    return {
+        k: partial(get_audios_info, AUDIO_PLAYLIST_URL, playlist_id=v)
+        for k, v in PLAYLIST_DICT.items()
+    }
+
+
+def _make_playlist_dict(offset=0, playlist_dict={}):
+    r = requests.get(PLAYLIST_API.format(limit=100, offset=0))
+    data = r.json()["data"]
+    for d in data:
+        playlist_dict[d["attributes"]["title"]] = d["id"]
+    return playlist_dict
 
 
 recent_func = partial(get_audios_info, AUDIOS_API)
