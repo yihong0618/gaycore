@@ -1,2 +1,3 @@
 requests
 miservice-fork
+curl_cffi

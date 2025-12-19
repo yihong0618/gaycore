@@ -34,7 +34,6 @@ class Player:
 
             elif strout == "@P 0":
                 # end, moving to next
-                playing_flag = True
                 break
             elif strout == "":
                 endless_loop_cnt += 1
