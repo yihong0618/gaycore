@@ -2,8 +2,8 @@
 from collections import defaultdict
 from functools import partial
 import json
-import subprocess
 import requests
+from curl_cffi import requests as curl_requests
 from gaycore.config import (
     IMAGE_BASE_URL,
     MP3_BASE_URL,
@@ -18,7 +18,7 @@ from gaycore.config import (
 
 
 def _get_json(url, timeout=20):
-    """优先用 requests；若被 WAF 返回 HTML，则回退到 curl 取 JSON。"""
+    """优先用 requests；若被 WAF 返回 HTML，则回退到 curl_cffi 取 JSON。"""
 
     try:
         r = requests.get(url, timeout=timeout)
@@ -28,20 +28,16 @@ def _get_json(url, timeout=20):
     except Exception:
         pass
 
-    out = subprocess.check_output(
-        [
-            "curl",
-            "-sS",
-            "--globoff",
-            "--max-time",
-            str(timeout),
-            "-H",
-            "Accept: application/vnd.api+json, application/json;q=0.9,*/*;q=0.8",
-            url,
-        ],
-        text=True,
+    # 使用 curl_cffi 模拟浏览器请求，绕过 WAF
+    r = curl_requests.get(
+        url,
+        timeout=timeout,
+        headers={
+            "Accept": "application/vnd.api+json, application/json;q=0.9,*/*;q=0.8"
+        },
+        impersonate="chrome",
     )
-    return json.loads(out)
+    return r.json()
 
 
 # func to format the content
@@ -50,21 +46,58 @@ def chunkstring(string, length):
 
 
 def get_audios_info(
-    API, offset=0, sort="-published-at", playlist_id=None, cate_id=None
+    API, offset=0, sort="-published-at", playlist_id=None, cate_id=None, page_size=10
 ):
-    if cate_id:
-        response_json = _get_json(API.format(cate_id=cate_id, limit=10, offset=offset))
-    elif playlist_id:
-        response_json = _get_json(
-            API.format(playlist_id=playlist_id, limit=10, offset=offset)
-        )
-    else:
-        response_json = _get_json(API.format(sort=sort, limit=10, offset=offset))
-    audio_info_dict = response_json["data"]
+    """获取音频列表，自动过滤付费节目并确保返回足够数量的结果"""
     results_dict = {}
-    for d in audio_info_dict:
-        attributes = d["attributes"]
-        results_dict[attributes["title"]] = d["id"]
+    # 每页需要 page_size 个结果，从 offset * page_size 开始
+    need_start = offset * page_size
+    need_end = need_start + page_size
+
+    collected = []
+    batch_limit = 50  # 每次请求更多数据以应对过滤
+    batch_offset = need_start
+    max_batches = 10
+
+    for _ in range(max_batches):
+        if cate_id:
+            response_json = _get_json(
+                API.format(cate_id=cate_id, limit=batch_limit, offset=batch_offset)
+            )
+        elif playlist_id:
+            response_json = _get_json(
+                API.format(
+                    playlist_id=playlist_id, limit=batch_limit, offset=batch_offset
+                )
+            )
+        else:
+            response_json = _get_json(
+                API.format(sort=sort, limit=batch_limit, offset=batch_offset)
+            )
+
+        audio_info_dict = response_json.get("data", [])
+
+        for d in audio_info_dict:
+            attributes = d["attributes"]
+            # 过滤付费节目
+            if attributes.get("is-require-privilege", False):
+                continue
+            collected.append((attributes["title"], d["id"]))
+
+        # 收集够了就停止
+        if len(collected) >= page_size:
+            break
+
+        # 如果返回数据不足，说明没有更多了
+        if len(audio_info_dict) < batch_limit:
+            break
+
+        batch_offset += batch_limit
+
+    # 只返回当前页需要的数据
+    for title, audio_id in collected[:page_size]:
+        results_dict[title] = audio_id
+
     return results_dict
 
 
@@ -81,10 +114,16 @@ def _parse_latest_radios_payload(payload):
             continue
 
         radio_obj = included_index.get(("radios", radio_id)) or {}
-        title = (radio_obj.get("attributes") or {}).get("title")
+        radio_attrs = radio_obj.get("attributes") or {}
+        title = radio_attrs.get("title")
         if not title:
             # 兜底：有时 included 不完整
             title = f"radio-{radio_id}"
+
+        # 过滤付费节目
+        is_require_privilege = radio_attrs.get("is-require-privilege", False)
+        if is_require_privilege:
+            continue
 
         category_id = None
         category_rel = (

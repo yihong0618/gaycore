@@ -1,0 +1,22 @@
+[project]
+name = "gaycore"
+version = "4.0"
+description = "A tiny and smart cli player of gcore audio, based on Python package curses and mpg123 for Linux or Mac"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "yihong0618", email = "zouzou0208@gmail.com" }
+]
+license = { text = "MIT" }
+dependencies = [
+  "requests",
+  "miservice-fork",
+  "curl-cffi>=0.14.0",
+]
+
+[project.scripts]
+gaycore = "gaycore.cli:run"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

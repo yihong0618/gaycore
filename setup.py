@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "3.0"
+VERSION = "4.0"
 
 setup(
     name="gaycore",
@@ -16,14 +16,13 @@ setup(
     include_package_data=True,
     zip_safe=True,
     install_requires=["requests", "miservice-fork"],
+    python_requires=">=3.10",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",

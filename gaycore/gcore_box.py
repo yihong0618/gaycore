@@ -110,7 +110,6 @@ class GcoreBox:
         thread.start()
 
     def mainloop(self):
-
         try:
             topy, _ = self._center(self.windows[0])
 
@@ -239,7 +238,6 @@ class GcoreBox:
                 if c == ord("\n"):
                     try:
                         if self.player.popen_handler:
-
                             if current_num == len(self.windows) - 1:
                                 webbrowser.open(self.flow_img)
                                 continue
@@ -291,7 +289,6 @@ class GcoreBox:
             return
 
     def _play_timeflow_info(self):
-
         # 播放时间轴
         if self.player.popen_handler:
             flow_info = dict(self.flow_info.get(self.player.process_length, ""))
@@ -345,7 +342,6 @@ class GcoreBox:
         self.windows.append(box)
 
     def _download_mp3(self, mp3_url, audio_name):
-
         # 下载进度
         def report(count, blockSize, totalSize):
             percent = int(count * blockSize * 100 / totalSize)
