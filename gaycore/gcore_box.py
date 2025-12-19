@@ -254,7 +254,7 @@ class GcoreBox:
                             self.flow_info = flow_info
                             # 添加播放时间轴
                             self._add_info_box()
-                    except Exception as e:
+                    except Exception:
                         pass
                 if c == ord("m"):
                     try:
@@ -267,7 +267,7 @@ class GcoreBox:
                         self.windows[-1].addstr(
                             1, 1, f"  正在用小爱播放\n  : {self.boxes[current_num]}"
                         )
-                    except Exception as e:
+                    except Exception:
                         pass
                 if c == ord("p"):
                     subprocess.check_output(["micli", "stop"])
@@ -356,7 +356,7 @@ class GcoreBox:
             self.stdscr.addstr(0, 0, audio_name + ": 下载完成")
             time.sleep(1)
             self.stdscr.clear()
-        except:
+        except Exception:
             self.stdscr.addstr(0, 0, "download error")
 
     def pick(self, boxes):

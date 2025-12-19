@@ -1,5 +1,4 @@
-from gaycore.cli import run
-from gaycore.utils import make_playlist_dict
+from .cli import run
 
 
 if __name__ == "__main__":
